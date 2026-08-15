@@ -1,0 +1,23 @@
+{
+  "name": "pomodoro-tray",
+  "version": "1.0.0",
+  "description": "番茄钟：番茄工作法桌面应用（Electron 托盘版 + 纯网页版）",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "pomodoro",
+    "timer",
+    "electron",
+    "schulte-grid",
+    "productivity",
+    "番茄钟"
+  ],
+  "author": "chen0521yuxuan",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^43.4.0",
+    "resedit": "^3.0.2"
+  }
+}

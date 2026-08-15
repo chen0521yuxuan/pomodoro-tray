@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>番茄钟</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%85%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --accent:#e5484d;
+  --bg:#f5f3ee;
+  --card:#ffffff;
+  --soft:#efede8;
+  --text:#20242e;
+  --muted:#8a8f9c;
+  --line:#e6e3dd;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14161b;
+    --card:#1d2027;
+    --soft:#262a33;
+    --text:#e8eaef;
+    --muted:#8b91a0;
+    --line:#2e333d;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  font-family:system-ui,"Segoe UI","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);
+  display:flex;justify-content:center;
+  padding:28px 16px;
+}
+.app{
+  width:100%;max-width:460px;
+  background:var(--card);
+  border-radius:22px;
+  padding:26px 24px 20px;
+  box-shadow:0 10px 36px rgba(0,0,0,.10);
+  display:flex;flex-direction:column;gap:16px;
+}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h1{font-size:21px;font-weight:700}
+.stats{font-size:13px;color:var(--muted)}
+.tabs{display:flex;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
+.tabs button{
+  flex:1;border:0;background:transparent;color:var(--muted);
+  font-size:14px;padding:9px 4px;border-radius:9px;cursor:pointer;
+  transition:background .2s,color .2s;
+}
+.tabs button.active{background:var(--accent);color:#fff;font-weight:600}
+.ring-wrap{position:relative;width:min(280px,80vw);margin:0 auto;aspect-ratio:1}
+.ring{width:100%;height:100%}
+.ring circle{fill:none;stroke-width:11}
+.ring .bg{stroke:var(--line)}
+.ring .fg{
+  stroke:var(--accent);stroke-linecap:round;
+  transform:rotate(-90deg);transform-origin:50% 50%;
+  transition:stroke-dashoffset .25s linear,stroke .4s;
+}
+.ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+}
+.time{font-size:54px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:2px}
+.phase{font-size:14px;color:var(--muted)}
+.dots{display:flex;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line);transition:background .3s}
+.dot.filled{background:var(--accent)}
+.quote{text-align:center;font-size:13px;color:var(--muted);min-height:20px}
+.goal input{
+  width:100%;padding:11px 14px;border-radius:12px;
+  border:1px solid var(--line);background:transparent;
+  color:var(--text);font-size:14px;outline:none;
+}
+.goal input:focus{border-color:var(--accent)}
+.controls{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:10px}
+.controls button{
+  padding:13px 8px;border-radius:13px;font-size:15px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--text);
+  transition:filter .15s,transform .1s;
+}
+.controls button.primary{
+  background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;
+}
+.controls button:hover{filter:brightness(1.06)}
+.controls button:active{transform:scale(.97)}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.chip{
+  padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--muted);
+  transition:background .2s,color .2s,border-color .2s;
+}
+.chip.active{
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+  border-color:var(--accent);color:var(--accent);
+}
+.durations{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.durations label{display:flex;align-items:center;gap:5px}
+.durations input{
+  width:52px;padding:5px 4px;text-align:center;border-radius:8px;
+  border:1px solid var(--line);background:transparent;color:var(--text);font-size:13px;
+}
+footer{text-align:center;font-size:12px;color:var(--muted)}
+
+/* ---------- 舒尔特方格 ---------- */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;z-index:50;backdrop-filter:blur(3px);
+}
+.overlay[hidden]{display:none}
+.schulte-card{
+  background:var(--card);border-radius:20px;padding:22px;
+  width:100%;max-width:430px;max-height:92vh;overflow:auto;
+  display:flex;flex-direction:column;gap:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+.s-head{display:flex;justify-content:space-between;align-items:center}
+.s-head h2{font-size:18px}
+.s-close{
+  border:0;background:transparent;color:var(--muted);font-size:18px;
+  cursor:pointer;padding:4px 8px;border-radius:8px;
+}
+.s-close:hover{background:var(--soft)}
+.s-tip{font-size:13px;color:var(--muted)}
+.s-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.s-sizes{display:flex;background:var(--soft);border-radius:9px;padding:3px;gap:2px}
+.s-sizes button{
+  border:0;background:transparent;color:var(--muted);font-size:12px;
+  padding:5px 10px;border-radius:7px;cursor:pointer;
+}
+.s-sizes button.active{background:var(--accent);color:#fff}
+.s-meters{display:flex;align-items:center;gap:12px;font-size:14px;font-variant-numeric:tabular-nums}
+#sTimer{font-weight:700}
+#sMistakes{color:var(--muted)}
+.s-mini{
+  padding:5px 10px;border-radius:8px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);font-size:12px;cursor:pointer;
+}
+.s-mini:hover{border-color:var(--accent);color:var(--accent)}
+.s-grid{display:grid;gap:8px;user-select:none}
+.s-cell{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  border:0;border-radius:10px;font-weight:600;cursor:pointer;
+  background:var(--soft);color:var(--text);
+  transition:transform .06s,background .15s;
+}
+.s-cell:hover{background:color-mix(in srgb,var(--accent) 14%,var(--soft))}
+.s-cell:active{transform:scale(.93)}
+.s-cell.hit{background:var(--accent);color:#fff;cursor:default}
+.s-cell.wrong{background:#e5484d;color:#fff}
+.s-result{
+  text-align:center;font-size:15px;line-height:1.9;
+  padding:12px;border-radius:12px;background:var(--soft);
+}
+.rating{font-weight:700}
+.great{color:#2f9e6e}
+.good{color:#4c6ef5}
+.ok{color:#e8a13c}
+.bad{color:#e5484d}
+.s-best{text-align:center;font-size:12px;color:var(--muted)}
+.s-actions{display:flex;gap:10px}
+.s-actions button{
+  flex:1;padding:12px;border-radius:12px;font-size:15px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--text);
+}
+.s-actions button.primary{
+  background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;
+}
+.s-auto{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer}
+.s-auto input{accent-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🍅 番茄钟</h1>
+    <div class="stats" id="stats"></div>
+  </header>
+  <nav class="tabs" id="tabs">
+    <button data-mode="focus" class="active">专注</button>
+    <button data-mode="short">短休息</button>
+    <button data-mode="long">长休息</button>
+  </nav>
+  <div class="ring-wrap">
+    <svg class="ring" viewBox="0 0 280 280">
+      <circle class="bg" cx="140" cy="140" r="124"></circle>
+      <circle class="fg" id="ringFg" cx="140" cy="140" r="124"></circle>
+    </svg>
+    <div class="ring-center">
+      <div class="time" id="time">25:00</div>
+      <div class="phase" id="phase">专注</div>
+      <div class="dots" id="dots"></div>
+    </div>
+  </div>
+  <div class="quote" id="quote">准备好了吗？点击「开始」🍅</div>
+  <div class="goal"><input id="goal" placeholder="🎯 今天最重要的一件事…" maxlength="60"></div>
+  <div class="controls">
+    <button id="reset" title="重置 (R)">重置</button>
+    <button id="main" class="primary">开始</button>
+    <button id="skip" title="跳过 (S)">跳过</button>
+  </div>
+  <div class="chips">
+    <button id="chipAuto" class="chip active" title="结束后自动开始下一阶段">⏭ 自动开始</button>
+    <button id="chipSound" class="chip active">🔔 提示音</button>
+    <button id="chipNoise" class="chip">🌊 白噪音</button>
+    <button id="chipFull" class="chip" title="全屏 (F)">全屏</button>
+    <button id="chipSchulte" class="chip" title="专注力测试">🎯 舒尔特测试</button>
+  </div>
+  <div class="durations">
+    <label>专注 <input type="number" id="dFocus" min="1" max="180"> 分</label>
+    <label>短休 <input type="number" id="dShort" min="1" max="60"> 分</label>
+    <label>长休 <input type="number" id="dLong" min="1" max="60"> 分</label>
+  </div>
+  <footer>空格 开始/暂停 · R 重置 · S 跳过 · F 全屏</footer>
+</div>
+
+<!-- 舒尔特方格弹层 -->
+<div class="overlay" id="schulte" hidden>
+  <div class="schulte-card">
+    <div class="s-head">
+      <h2>🎯 舒尔特方格</h2>
+      <button class="s-close" id="sClose" title="关闭 (Esc)">✕</button>
+    </div>
+    <p class="s-tip">按 1 → N 的顺序依次点击数字，越快说明注意力越集中</p>
+    <div class="s-toolbar">
+      <div class="s-sizes" id="sSizes">
+        <button data-size="4">4×4</button>
+        <button data-size="5" class="active">5×5</button>
+        <button data-size="6">6×6</button>
+      </div>
+      <div class="s-meters">
+        <button id="sRestart" class="s-mini">重来</button>
+        <span id="sTimer">0.0 s</span>
+        <span id="sMistakes">错误 0</span>
+      </div>
+    </div>
+    <div class="s-grid" id="sGrid"></div>
+    <div class="s-result" id="sResult" hidden></div>
+    <div class="s-best" id="sBest"></div>
+    <div class="s-actions">
+      <button id="sAgain" hidden>再测一次</button>
+      <button id="sGo" class="primary" hidden>开始专注 🍅</button>
+    </div>
+    <label class="s-auto"><input type="checkbox" id="sAuto" checked> 每次开始专注前先测一测</label>
+  </div>
+</div>
+
+<script>
+'use strict'
+const $ = id => document.getElementById(id)
+const el = {
+  time: $('time'), phase: $('phase'), dots: $('dots'), stats: $('stats'), quote: $('quote'),
+  main: $('main'), reset: $('reset'), skip: $('skip'), tabs: $('tabs'),
+  ringFg: $('ringFg'), goal: $('goal'),
+  chipAuto: $('chipAuto'), chipSound: $('chipSound'), chipNoise: $('chipNoise'), chipFull: $('chipFull'),
+  chipSchulte: $('chipSchulte'),
+  dFocus: $('dFocus'), dShort: $('dShort'), dLong: $('dLong'),
+  schulte: $('schulte'), sGrid: $('sGrid'), sTimer: $('sTimer'), sMistakes: $('sMistakes'),
+  sResult: $('sResult'), sBest: $('sBest'), sAgain: $('sAgain'), sGo: $('sGo'), sClose: $('sClose'),
+  sRestart: $('sRestart'), sSizes: $('sSizes'), sAuto: $('sAuto'),
+}
+
+const MODES = {
+  focus: { name: '专注', color: '#e5484d' },
+  short: { name: '短休息', color: '#2f9e6e' },
+  long:  { name: '长休息', color: '#4c6ef5' },
+}
+const QUOTES = {
+  focus: ['把手机放远一点，现在只做这一件事 🍅','先完成，再完美。','25 分钟后，你会感谢现在的自己。','深呼吸，专注当下这一分钟。','最好的开始时间，就是现在。'],
+  break: ['起来走走，喝口水 💧','看看远处，放松眼睛 👀','伸个懒腰，再战一轮 💪'],
+}
+const RING_R = 124
+const CIRC = 2 * Math.PI * RING_R
+el.ringFg.style.strokeDasharray = CIRC
+
+function load(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    if (raw == null) return fallback
+    const v = JSON.parse(raw)
+    if (v && typeof v === 'object') return Object.assign({}, fallback, v)
+  } catch (e) {}
+  return Object.assign({}, fallback)
+}
+function save(key, value) { try { localStorage.setItem(key, JSON.stringify(value)) } catch (e) {} }
+
+let settings = load('pomo.settings', { focus: 25, short: 5, long: 15, auto: true, sound: true, noise: false, schulte: true })
+settings.noise = false // 白噪音只在本次打开期间有效
+let mode = 'focus'
+let running = false
+let endTime = 0
+let remaining = settings.focus * 60
+let timerId = null
+let cyclePos = 0 // 本循环内已完成的专注数 0-4
+
+function todayKey() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() }
+let today = load('pomo.today', { date: '', count: 0, minutes: 0 })
+if (today.date !== todayKey()) today = { date: todayKey(), count: 0, minutes: 0 }
+function saveToday() { save('pomo.today', today) }
+
+/* ---------- 音频 ---------- */
+let actx = null
+function audio() {
+  if (!actx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) actx = new AC() }
+  if (actx && actx.state === 'suspended') actx.resume()
+  return actx
+}
+function tone(freq, when, dur, vol) {
+  const ctx = audio(); if (!ctx) return
+  const o = ctx.createOscillator(), g = ctx.createGain()
+  o.type = 'sine'
+  o.frequency.value = freq
+  g.gain.setValueAtTime(0.0001, when)
+  g.gain.linearRampToValueAtTime(vol, when + 0.015)
+  g.gain.exponentialRampToValueAtTime(0.0001, when + dur)
+  o.connect(g)
+  g.connect(ctx.destination)
+  o.start(when)
+  o.stop(when + dur + 0.05)
+}
+function playBell() {
+  if (!settings.sound) return
+  const ctx = audio(); if (!ctx) return
+  const t = ctx.currentTime + 0.02
+  tone(659.25, t, 1.6, 0.32)       // E5
+  tone(1318.5, t, 1.3, 0.12)       // E6
+  tone(1975.5, t, 0.9, 0.05)
+  tone(523.25, t + 0.35, 1.9, 0.30) // C5
+  tone(1046.5, t + 0.35, 1.4, 0.10)
+}
+let noiseNodes = null
+function pinkBuffer(ctx) {
+  const len = ctx.sampleRate * 2
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate)
+  const d = buf.getChannelData(0)
+  let b0 = 0, b1 = 0, b2 = 0
+  for (let i = 0; i < len; i++) {
+    const w = Math.random() * 2 - 1
+    b0 = 0.997 * b0 + 0.029 * w
+    b1 = 0.985 * b1 + 0.032 * w
+    b2 = 0.950 * b2 + 0.048 * w
+    d[i] = (b0 + b1 + b2 + w * 0.05) * 0.11
+  }
+  return buf
+}
+function noiseOn() {
+  const ctx = audio(); if (!ctx || noiseNodes) return
+  const src = ctx.createBufferSource()
+  src.buffer = pinkBuffer(ctx)
+  src.loop = true
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = 1600
+  const g = ctx.createGain()
+  g.gain.setValueAtTime(0.0001, ctx.currentTime)
+  g.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + 0.6)
+  src.connect(lp); lp.connect(g); g.connect(ctx.destination)
+  src.start()
+  noiseNodes = [src, lp, g]
+}
+function noiseOff() {
+  if (!noiseNodes) return
+  const src = noiseNodes[0], g = noiseNodes[2]
+  noiseNodes = null
+  const ctx = audio()
+  if (ctx) {
+    try {
+      g.gain.cancelScheduledValues(ctx.currentTime)
+      g.gain.setValueAtTime(g.gain.value, ctx.currentTime)
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3)
+    } catch (e) {}
+  }
+  setTimeout(() => { try { src.stop() } catch (e) {} }, 450)
+}
+
+/* ---------- 通知 ---------- */
+function notice(title, body) {
+  const hosted = !!(window.pomoBridge || (window.chrome && chrome.webview))
+  if (hosted && document.hidden) return // 托盘版窗口隐藏时由宿主进程发通知
+  try {
+    if ('Notification' in window && Notification.permission === 'granted') new Notification(title, { body: body })
+  } catch (e) {}
+}
+
+/* ---------- 托盘版桥接（Electron / WebView2） ---------- */
+function postState(left) {
+  const msg = { type: 'state', mode: mode, label: MODES[mode].name, running: running, remaining: left }
+  try {
+    if (window.pomoBridge) { window.pomoBridge.post(msg); return }
+    if (window.chrome && chrome.webview && chrome.webview.postMessage) chrome.webview.postMessage(msg)
+  } catch (e) {}
+}
+function postDone(finished, count) {
+  const msg = { type: 'done', finished: finished, count: count }
+  try {
+    if (window.pomoBridge) { window.pomoBridge.post(msg); return }
+    if (window.chrome && chrome.webview && chrome.webview.postMessage) chrome.webview.postMessage(msg)
+  } catch (e) {}
+}
+window.__pomoCmd = function (cmd) {
+  if (cmd === 'ping') {
+    postState(running ? Math.max(0, Math.round((endTime - Date.now()) / 1000)) : remaining)
+    return
+  }
+  if (cmd === 'start') { if (schulte.open) sClose(); start(true); return }
+  if (cmd === 'pause') { pause(); return }
+  if (cmd === 'skip') { skip(); return }
+  if (cmd === 'complete') { if (running) complete() }
+}
+try {
+  if (window.pomoBridge && window.pomoBridge.onCmd) window.pomoBridge.onCmd((c) => window.__pomoCmd(c))
+} catch (e) {}
+
+/* ---------- 计时 ---------- */
+function total() { return settings[mode] * 60 }
+function fmt(s) {
+  s = Math.max(0, s)
+  const m = Math.floor(s / 60), r = s % 60
+  return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0')
+}
+function switchTo(m) {
+  mode = m
+  remaining = total()
+  render()
+}
+function start(bypass) {
+  if (running) return
+  if (!bypass && mode === 'focus' && settings.schulte) { sOpen(true); return }
+  audio()
+  try {
+    if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()
+  } catch (e) {}
+  const quotes = QUOTES[mode] || QUOTES.focus
+  el.quote.textContent = quotes[Math.floor(Math.random() * quotes.length)]
+  endTime = Date.now() + remaining * 1000
+  running = true
+  timerId = setInterval(tick, 250)
+  render()
+}
+function pause() {
+  if (!running) return
+  running = false
+  clearInterval(timerId); timerId = null
+  remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000))
+  render()
+}
+function toggle() { running ? pause() : start() }
+function reset() {
+  if (running) pause()
+  remaining = total()
+  render()
+}
+function nextMode() { return mode === 'focus' ? 'short' : 'focus' }
+function skip() {
+  const was = running
+  if (running) pause()
+  if (mode === 'long') cyclePos = 0
+  switchTo(nextMode())
+  if (was) start(true)
+}
+function tick() {
+  const left = Math.max(0, Math.round((endTime - Date.now()) / 1000))
+  remaining = left
+  render()
+  if (left <= 0) complete()
+}
+function complete() {
+  running = false
+  clearInterval(timerId); timerId = null
+  remaining = 0
+  playBell()
+  try { if (navigator.vibrate) navigator.vibrate([200, 100, 300]) } catch (e) {}
+  const finished = mode
+  if (finished === 'focus') {
+    cyclePos = Math.min(cyclePos + 1, 4)
+    today.count++
+    today.minutes += settings.focus
+    saveToday()
+    notice('专注完成！', '已完成 ' + today.count + ' 个番茄，休息一下吧 ☕')
+  } else if (finished === 'long') {
+    cyclePos = 0
+    notice('长休息结束', '开始新的一轮专注吧 🍅')
+  } else {
+    notice('休息结束', '开始专注吧 🍅')
+  }
+  postDone(finished, today.count)
+  switchTo(finished === 'focus' ? (cyclePos >= 4 ? 'long' : 'short') : 'focus')
+  if (settings.auto) start()
+}
+function render() {
+  const t = total()
+  const left = running ? Math.max(0, Math.round((endTime - Date.now()) / 1000)) : remaining
+  el.time.textContent = fmt(left)
+  el.phase.textContent = MODES[mode].name
+  const p = t > 0 ? Math.min(1, 1 - left / t) : 0
+  el.ringFg.style.strokeDashoffset = CIRC * (1 - p)
+  document.documentElement.style.setProperty('--accent', MODES[mode].color)
+  el.main.textContent = running ? '暂停' : (left < t ? '继续' : '开始')
+  el.stats.textContent = '今天 🍅 × ' + today.count + ' · 专注 ' + today.minutes + ' 分钟'
+  Array.from(el.tabs.children).forEach(b => b.classList.toggle('active', b.dataset.mode === mode))
+  el.dots.innerHTML = ''
+  for (let i = 0; i < 4; i++) {
+    const s = document.createElement('span')
+    s.className = 'dot' + (i < cyclePos ? ' filled' : '')
+    el.dots.appendChild(s)
+  }
+  document.title = fmt(left) + ' ' + MODES[mode].name + ' · 番茄钟'
+  postState(left)
+}
+
+/* ---------- 舒尔特方格 ---------- */
+const schulte = {
+  open: false, pendingStart: false, size: 5,
+  next: 1, mistakes: 0, t0: 0, done: false,
+  best: load('pomo.schulte', { 4: 0, 5: 0, 6: 0 }),
+}
+let sTimerId = null
+function sOpen(pending) {
+  schulte.open = true
+  schulte.pendingStart = !!pending
+  el.schulte.hidden = false
+  el.sAuto.checked = settings.schulte
+  sNewGrid()
+  sTimerId = setInterval(sTick, 100)
+}
+function sClose() {
+  schulte.open = false
+  schulte.pendingStart = false
+  clearInterval(sTimerId); sTimerId = null
+  el.schulte.hidden = true
+}
+function sNewGrid() {
+  const n = schulte.size * schulte.size
+  const arr = []
+  for (let i = 1; i <= n; i++) arr.push(i)
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const t = arr[i]; arr[i] = arr[j]; arr[j] = t
+  }
+  schulte.next = 1
+  schulte.mistakes = 0
+  schulte.t0 = 0
+  schulte.done = false
+  el.sGrid.style.gridTemplateColumns = 'repeat(' + schulte.size + ', 1fr)'
+  el.sGrid.innerHTML = ''
+  const fs = schulte.size === 4 ? '30px' : (schulte.size === 5 ? '24px' : '18px')
+  arr.forEach(v => {
+    const b = document.createElement('button')
+    b.className = 's-cell'
+    b.dataset.v = v
+    b.textContent = v
+    b.style.fontSize = fs
+    el.sGrid.appendChild(b)
+  })
+  el.sTimer.textContent = '0.0 s'
+  el.sMistakes.textContent = '错误 0'
+  el.sResult.hidden = true
+  el.sAgain.hidden = true
+  el.sGo.hidden = true
+  renderBest()
+  Array.from(el.sSizes.children).forEach(x => x.classList.toggle('active', parseInt(x.dataset.size, 10) === schulte.size))
+}
+function sTick() {
+  if (!schulte.t0 || schulte.done) return
+  el.sTimer.textContent = ((performance.now() - schulte.t0) / 1000).toFixed(1) + ' s'
+}
+function renderBest() {
+  const b = schulte.best[schulte.size]
+  el.sBest.textContent = '最佳 ' + schulte.size + '×' + schulte.size + '：' + (b ? b.toFixed(1) + ' 秒' : '暂无记录')
+}
+function sFinish() {
+  schulte.done = true
+  const secs = (performance.now() - schulte.t0) / 1000
+  const per = secs / (schulte.size * schulte.size)
+  let rating = '需要练习', cls = 'bad'
+  if (per <= 0.4) { rating = '优秀'; cls = 'great' }
+  else if (per <= 0.6) { rating = '良好'; cls = 'good' }
+  else if (per <= 0.8) { rating = '一般'; cls = 'ok' }
+  const prev = schulte.best[schulte.size]
+  const isBest = !prev || secs < prev
+  if (isBest) { schulte.best[schulte.size] = secs; save('pomo.schulte', schulte.best) }
+  el.sResult.hidden = false
+  el.sResult.innerHTML = '用时 <b>' + secs.toFixed(1) + '</b> 秒 · 错误 ' + schulte.mistakes + ' 次' +
+    '<br><span class="rating ' + cls + '">' + rating + '</span>' +
+    (isBest ? ' · 新纪录！🎉' : '')
+  renderBest()
+  el.sAgain.hidden = false
+  el.sAgain.textContent = '再测一次'
+  el.sGo.hidden = false
+  el.sGo.textContent = schulte.pendingStart ? '开始专注 🍅' : '关闭'
+}
+el.sGrid.addEventListener('click', e => {
+  const cell = e.target.closest('.s-cell')
+  if (!cell || schulte.done || cell.classList.contains('hit')) return
+  const v = parseInt(cell.dataset.v, 10)
+  if (v === schulte.next) {
+    if (schulte.next === 1) schulte.t0 = performance.now()
+    cell.classList.add('hit')
+    schulte.next++
+    if (schulte.next > schulte.size * schulte.size) sFinish()
+  } else {
+    schulte.mistakes++
+    el.sMistakes.textContent = '错误 ' + schulte.mistakes
+    cell.classList.add('wrong')
+    setTimeout(() => cell.classList.remove('wrong'), 300)
+  }
+})
+el.sSizes.addEventListener('click', e => {
+  const b = e.target.closest('button')
+  if (!b) return
+  schulte.size = parseInt(b.dataset.size, 10)
+  sNewGrid()
+})
+el.sRestart.addEventListener('click', sNewGrid)
+el.sAgain.addEventListener('click', sNewGrid)
+el.sGo.addEventListener('click', () => {
+  const go = schulte.pendingStart
+  sClose()
+  if (go) start(true)
+})
+el.sClose.addEventListener('click', sClose)
+el.sAuto.addEventListener('change', () => {
+  settings.schulte = el.sAuto.checked
+  save('pomo.settings', settings)
+})
+el.chipSchulte.addEventListener('click', () => sOpen(false))
+el.sAuto.checked = settings.schulte
+
+/* ---------- 事件 ---------- */
+el.main.addEventListener('click', toggle)
+el.reset.addEventListener('click', reset)
+el.skip.addEventListener('click', skip)
+el.tabs.addEventListener('click', e => {
+  const b = e.target.closest('button')
+  if (!b) return
+  if (running) pause()
+  mode = b.dataset.mode
+  remaining = total()
+  render()
+})
+function chip(btn, active, onClick) {
+  btn.classList.toggle('active', active)
+  btn.addEventListener('click', () => {
+    const next = !btn.classList.contains('active')
+    btn.classList.toggle('active', next)
+    onClick(next)
+  })
+}
+chip(el.chipAuto, settings.auto, v => { settings.auto = v; save('pomo.settings', settings) })
+chip(el.chipSound, settings.sound, v => { settings.sound = v; save('pomo.settings', settings); if (v) playBell() })
+chip(el.chipNoise, settings.noise, v => {
+  settings.noise = v; save('pomo.settings', settings)
+  if (v) noiseOn(); else noiseOff()
+})
+chip(el.chipFull, false, v => {
+  if (v) {
+    const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen()
+    if (p && p.catch) p.catch(() => el.chipFull.classList.remove('active'))
+  } else if (document.fullscreenElement) document.exitFullscreen()
+})
+document.addEventListener('fullscreenchange', () => {
+  el.chipFull.classList.toggle('active', !!document.fullscreenElement)
+})
+function bindDur(input, key) {
+  input.value = settings[key]
+  input.addEventListener('change', () => {
+    let v = parseInt(input.value, 10)
+    if (isNaN(v) || v < 1) v = 1
+    const max = key === 'focus' ? 180 : 60
+    if (v > max) v = max
+    input.value = v
+    settings[key] = v
+    save('pomo.settings', settings)
+    if (mode === key && !running) { remaining = total(); render() }
+  })
+}
+bindDur(el.dFocus, 'focus')
+bindDur(el.dShort, 'short')
+bindDur(el.dLong, 'long')
+try { el.goal.value = localStorage.getItem('pomo.goal') || '' } catch (e) {}
+el.goal.addEventListener('input', () => {
+  try { localStorage.setItem('pomo.goal', el.goal.value) } catch (e) {}
+})
+document.addEventListener('keydown', e => {
+  const tag = (e.target && e.target.tagName) || ''
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return
+  if (e.code === 'Escape' && schulte.open) { sClose(); return }
+  if (schulte.open) return
+  if (e.code === 'Space') { e.preventDefault(); toggle() }
+  else if (e.code === 'KeyR') reset()
+  else if (e.code === 'KeyS') skip()
+  else if (e.code === 'KeyF') {
+    if (document.fullscreenElement) document.exitFullscreen()
+    else document.documentElement.requestFullscreen()
+  }
+})
+document.addEventListener('visibilitychange', () => { if (!document.hidden && running) tick() })
+
+render()
+</script>
+</body>
+</html>
