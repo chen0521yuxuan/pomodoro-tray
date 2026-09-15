@@ -153,7 +153,8 @@ if (!gotLock) {
   app.whenReady().then(() => {
     try {
       session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => {
-        cb(permission === 'notifications')
+        // 允许：系统通知、全屏（F 键）、剪贴板写入（导出备份）
+        cb(permission === 'notifications' || permission === 'fullscreen' || permission === 'clipboard-sanitized-write')
       })
     } catch (err) {}
     createWindow()

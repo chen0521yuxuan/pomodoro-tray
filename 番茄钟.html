@@ -264,7 +264,7 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
 </div>
 
 <!-- 专注统计弹层 -->
-<div class="overlay" id="stats" hidden>
+<div class="overlay" id="statsPanel" hidden>
   <div class="schulte-card">
     <div class="s-head">
       <h2>📊 专注统计</h2>
@@ -295,7 +295,7 @@ const el = {
   schulte: $('schulte'), sGrid: $('sGrid'), sTimer: $('sTimer'), sMistakes: $('sMistakes'),
   sResult: $('sResult'), sBest: $('sBest'), sAgain: $('sAgain'), sGo: $('sGo'), sClose: $('sClose'),
   sRestart: $('sRestart'), sSizes: $('sSizes'), sAuto: $('sAuto'),
-  stats: $('stats'), statsSummary: $('statsSummary'), statsBars: $('statsBars'),
+  statsPanel: $('statsPanel'), statsSummary: $('statsSummary'), statsBars: $('statsBars'),
   statsTotal: $('statsTotal'), statsIO: $('statsIO'), statsClose: $('statsClose'),
   statsExport: $('statsExport'), statsImport: $('statsImport'),
 }
@@ -744,11 +744,11 @@ function renderStats() {
   })
 }
 function statsOpen() {
-  el.stats.hidden = false
+  el.statsPanel.hidden = false
   el.statsIO.value = ''
   renderStats()
 }
-function statsClose() { el.stats.hidden = true }
+function statsClose() { el.statsPanel.hidden = true }
 function statsExport() {
   const data = {
     app: 'pomodoro-tray', exportedAt: new Date().toISOString(),
@@ -847,11 +847,13 @@ el.goal.addEventListener('input', () => {
 document.addEventListener('keydown', e => {
   const tag = (e.target && e.target.tagName) || ''
   if (tag === 'INPUT' || tag === 'TEXTAREA') return
+  // 按钮聚焦时，空格/回车交给按钮原生激活（这样下方功能可以用键盘操作）
+  if (tag === 'BUTTON' && (e.code === 'Space' || e.code === 'Enter')) return
   if (e.code === 'Escape') {
     if (schulte.open) { sClose(); return }
-    if (!el.stats.hidden) { statsClose(); return }
+    if (!el.statsPanel.hidden) { statsClose(); return }
   }
-  if (schulte.open || !el.stats.hidden) return
+  if (schulte.open || !el.statsPanel.hidden) return
   if (e.code === 'Space') { e.preventDefault(); toggle() }
   else if (e.code === 'KeyR') reset()
   else if (e.code === 'KeyS') skip()
