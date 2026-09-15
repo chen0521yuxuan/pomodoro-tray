@@ -174,6 +174,17 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
 }
 .s-auto{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer}
 .s-auto input{accent-color:var(--accent)}
+.stats-summary{font-size:14px;line-height:1.9}
+.stats-summary b{font-size:16px}
+.stats-bars{display:flex;align-items:flex-end;gap:8px;height:150px;padding:6px 0}
+.stats-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%}
+.stats-bar{width:100%;max-width:34px;background:var(--accent);border-radius:5px 5px 0 0;transition:height .3s}
+.stats-bar.zero{background:var(--line)}
+.stats-bar-val{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stats-bar-label{font-size:11px;color:var(--muted)}
+.stats-total{font-size:12px;color:var(--muted);line-height:1.7}
+.stats-io{width:100%;height:76px;padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:12px;font-family:ui-monospace,Consolas,monospace;resize:none}
+.stats-hint{font-size:11px;color:var(--muted);text-align:center}
 </style>
 </head>
 <body>
@@ -211,6 +222,7 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
     <button id="chipNoise" class="chip">🌊 白噪音</button>
     <button id="chipFull" class="chip" title="全屏 (F)">全屏</button>
     <button id="chipSchulte" class="chip" title="专注力测试">🎯 舒尔特测试</button>
+    <button id="chipStats" class="chip" title="专注统计与数据备份">📊 统计</button>
   </div>
   <div class="durations">
     <label>专注 <input type="number" id="dFocus" min="1" max="180"> 分</label>
@@ -251,6 +263,25 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
   </div>
 </div>
 
+<!-- 专注统计弹层 -->
+<div class="overlay" id="stats" hidden>
+  <div class="schulte-card">
+    <div class="s-head">
+      <h2>📊 专注统计</h2>
+      <button class="s-close" id="statsClose" title="关闭 (Esc)">✕</button>
+    </div>
+    <div class="stats-summary" id="statsSummary"></div>
+    <div class="stats-bars" id="statsBars"></div>
+    <div class="stats-total" id="statsTotal"></div>
+    <textarea class="stats-io" id="statsIO" placeholder="导出的备份会显示在这里；导入时把备份内容粘贴到这里" spellcheck="false"></textarea>
+    <div class="s-actions">
+      <button id="statsExport">📤 导出备份</button>
+      <button id="statsImport">📥 导入备份</button>
+    </div>
+    <p class="stats-hint">数据只保存在本机，建议定期导出备份</p>
+  </div>
+</div>
+
 <script>
 'use strict'
 const $ = id => document.getElementById(id)
@@ -259,11 +290,14 @@ const el = {
   main: $('main'), reset: $('reset'), skip: $('skip'), tabs: $('tabs'),
   ringFg: $('ringFg'), goal: $('goal'),
   chipAuto: $('chipAuto'), chipSound: $('chipSound'), chipNoise: $('chipNoise'), chipFull: $('chipFull'),
-  chipSchulte: $('chipSchulte'),
+  chipSchulte: $('chipSchulte'), chipStats: $('chipStats'),
   dFocus: $('dFocus'), dShort: $('dShort'), dLong: $('dLong'),
   schulte: $('schulte'), sGrid: $('sGrid'), sTimer: $('sTimer'), sMistakes: $('sMistakes'),
   sResult: $('sResult'), sBest: $('sBest'), sAgain: $('sAgain'), sGo: $('sGo'), sClose: $('sClose'),
   sRestart: $('sRestart'), sSizes: $('sSizes'), sAuto: $('sAuto'),
+  stats: $('stats'), statsSummary: $('statsSummary'), statsBars: $('statsBars'),
+  statsTotal: $('statsTotal'), statsIO: $('statsIO'), statsClose: $('statsClose'),
+  statsExport: $('statsExport'), statsImport: $('statsImport'),
 }
 
 const MODES = {
@@ -300,9 +334,17 @@ let timerId = null
 let cyclePos = 0 // 本循环内已完成的专注数 0-4
 
 function todayKey() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() }
-let today = load('pomo.today', { date: '', count: 0, minutes: 0 })
-if (today.date !== todayKey()) today = { date: todayKey(), count: 0, minutes: 0 }
-function saveToday() { save('pomo.today', today) }
+// 每日专注记录：history['YYYY-M-D'] = { count: 番茄数, minutes: 专注分钟 }
+let history = load('pomo.history', {})
+// 兼容旧版 pomo.today 单日数据，自动迁移进 history
+try {
+  if (!Object.keys(history).length) {
+    const old = JSON.parse(localStorage.getItem('pomo.today') || 'null')
+    if (old && old.date && (old.count || old.minutes)) history[old.date] = { count: old.count || 0, minutes: old.minutes || 0 }
+  }
+} catch (e) {}
+function saveHistory() { save('pomo.history', history) }
+let today = history[todayKey()] || { count: 0, minutes: 0 }
 
 /* ---------- 音频 ---------- */
 let actx = null
@@ -479,9 +521,13 @@ function complete() {
   const finished = mode
   if (finished === 'focus') {
     cyclePos = Math.min(cyclePos + 1, 4)
-    today.count++
-    today.minutes += settings.focus
-    saveToday()
+    const k = todayKey()
+    const rec = history[k] || { count: 0, minutes: 0 }
+    rec.count++
+    rec.minutes += settings.focus
+    history[k] = rec
+    today = rec
+    saveHistory()
     notice('专注完成！', '已完成 ' + today.count + ' 个番茄，休息一下吧 ☕')
   } else if (finished === 'long') {
     cyclePos = 0
@@ -632,6 +678,117 @@ el.sAuto.addEventListener('change', () => {
 el.chipSchulte.addEventListener('click', () => sOpen(false))
 el.sAuto.checked = settings.schulte
 
+/* ---------- 专注统计 ---------- */
+function toast(msg) {
+  let t = document.getElementById('toast')
+  if (!t) {
+    t = document.createElement('div')
+    t.id = 'toast'
+    t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:13px;z-index:99;transition:opacity .3s;opacity:0;pointer-events:none;max-width:80vw;text-align:center;'
+    document.body.appendChild(t)
+  }
+  t.textContent = msg
+  t.style.opacity = '1'
+  clearTimeout(toast._t)
+  toast._t = setTimeout(() => { t.style.opacity = '0' }, 2200)
+}
+function dayRec(d) { return history[d] || { count: 0, minutes: 0 } }
+function lastNDays(n) {
+  const out = []
+  const now = new Date()
+  const wd = ['日', '一', '二', '三', '四', '五', '六']
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+    const key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
+    out.push({ key, label: (d.getMonth() + 1) + '/' + d.getDate(), wd: wd[d.getDay()], ...dayRec(key) })
+  }
+  return out
+}
+function streakDays() {
+  let s = 0
+  const now = new Date()
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+    const key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
+    if (dayRec(key).count > 0) s++
+    else if (i > 0) break
+  }
+  return s
+}
+function renderStats() {
+  const days = lastNDays(7)
+  const week = days.reduce((a, d) => a + d.minutes, 0)
+  const weekCount = days.reduce((a, d) => a + d.count, 0)
+  let totalMin = 0, totalCount = 0, daysActive = 0
+  for (const k in history) { totalMin += history[k].minutes || 0; totalCount += history[k].count || 0; daysActive++ }
+  el.statsSummary.innerHTML = '今日：<b>' + today.minutes + '</b> 分钟 · ' + today.count + ' 个番茄<br>' +
+    '近 7 天：' + week + ' 分钟 · ' + weekCount + ' 个番茄'
+  el.statsTotal.textContent = '累计：' + totalMin + ' 分钟（约 ' + (totalMin / 60).toFixed(1) + ' 小时）· ' + totalCount + ' 个番茄 · ' + daysActive + ' 天有记录 · 连续 ' + streakDays() + ' 天'
+  const max = Math.max(1, ...days.map(d => d.minutes))
+  el.statsBars.innerHTML = ''
+  days.forEach(d => {
+    const col = document.createElement('div')
+    col.className = 'stats-bar-col'
+    const bar = document.createElement('div')
+    bar.className = 'stats-bar' + (d.minutes === 0 ? ' zero' : '')
+    bar.style.height = (d.minutes === 0 ? 3 : Math.max(4, Math.round(d.minutes / max * 96))) + 'px'
+    bar.title = d.key + ' 周' + d.wd + '：' + d.minutes + ' 分钟'
+    const val = document.createElement('div')
+    val.className = 'stats-bar-val'
+    val.textContent = d.minutes
+    const lab = document.createElement('div')
+    lab.className = 'stats-bar-label'
+    lab.textContent = d.label
+    col.appendChild(val); col.appendChild(bar); col.appendChild(lab)
+    el.statsBars.appendChild(col)
+  })
+}
+function statsOpen() {
+  el.stats.hidden = false
+  el.statsIO.value = ''
+  renderStats()
+}
+function statsClose() { el.stats.hidden = true }
+function statsExport() {
+  const data = {
+    app: 'pomodoro-tray', exportedAt: new Date().toISOString(),
+    history, settings: Object.assign({}, settings, { noise: false }), schulteBest: schulte.best,
+  }
+  el.statsIO.value = JSON.stringify(data)
+  el.statsIO.select()
+  let copied = false
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(el.statsIO.value); copied = true
+    } else if (document.execCommand) {
+      copied = document.execCommand('copy')
+    }
+  } catch (e) {}
+  toast(copied ? '已复制到剪贴板，也可手动复制下方内容' : '复制失败，请手动选择并复制')
+}
+function statsImport() {
+  let data
+  try { data = JSON.parse(el.statsIO.value) } catch (e) { toast('内容不是有效的备份数据'); return }
+  if (!data || typeof data.history !== 'object') { toast('备份数据缺少 history 字段'); return }
+  history = data.history
+  saveHistory()
+  if (data.settings && typeof data.settings === 'object') {
+    settings = Object.assign(settings, data.settings)
+    settings.noise = false
+    save('pomo.settings', settings)
+  }
+  if (data.schulteBest && typeof data.schulteBest === 'object') { schulte.best = data.schulteBest; save('pomo.schulte', schulte.best) }
+  today = history[todayKey()] || { count: 0, minutes: 0 }
+  el.dFocus.value = settings.focus; el.dShort.value = settings.short; el.dLong.value = settings.long
+  render()
+  renderStats()
+  toast('导入成功')
+}
+el.chipStats.addEventListener('click', statsOpen)
+el.statsClose.addEventListener('click', statsClose)
+el.statsExport.addEventListener('click', statsExport)
+el.statsImport.addEventListener('click', statsImport)
+
 /* ---------- 事件 ---------- */
 el.main.addEventListener('click', toggle)
 el.reset.addEventListener('click', reset)
@@ -690,8 +847,11 @@ el.goal.addEventListener('input', () => {
 document.addEventListener('keydown', e => {
   const tag = (e.target && e.target.tagName) || ''
   if (tag === 'INPUT' || tag === 'TEXTAREA') return
-  if (e.code === 'Escape' && schulte.open) { sClose(); return }
-  if (schulte.open) return
+  if (e.code === 'Escape') {
+    if (schulte.open) { sClose(); return }
+    if (!el.stats.hidden) { statsClose(); return }
+  }
+  if (schulte.open || !el.stats.hidden) return
   if (e.code === 'Space') { e.preventDefault(); toggle() }
   else if (e.code === 'KeyR') reset()
   else if (e.code === 'KeyS') skip()
