@@ -139,7 +139,9 @@ function onDone(msg) {
   }
 }
 
-app.setAppUserModelId('com.pomodoro.tray')
+// 未打包的 Electron 应用应使用可执行文件路径作为 AppUserModelID：
+// 这样任务栏能与指向 electron.exe 的快捷方式/固定项正确归组，系统通知也更可靠
+app.setAppUserModelId(process.execPath)
 
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
