@@ -33,15 +33,15 @@ body{
   font-family:system-ui,"Segoe UI","Microsoft YaHei",sans-serif;
   background:var(--bg);color:var(--text);
   display:flex;justify-content:center;
-  padding:28px 16px;
+  padding:22px 16px;
 }
 .app{
   width:100%;max-width:460px;
   background:var(--card);
   border-radius:22px;
-  padding:26px 24px 20px;
+  padding:22px 24px 16px;
   box-shadow:0 10px 36px rgba(0,0,0,.10);
-  display:flex;flex-direction:column;gap:16px;
+  display:flex;flex-direction:column;gap:14px;
 }
 header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 h1{font-size:21px;font-weight:700}
@@ -105,6 +105,24 @@ h1{font-size:21px;font-weight:700}
   width:52px;padding:5px 4px;text-align:center;border-radius:8px;
   border:1px solid var(--line);background:transparent;color:var(--text);font-size:13px;
 }
+.tasknow{
+  text-align:center;font-size:13px;line-height:1.5;color:var(--muted);
+  cursor:pointer;min-height:20px;
+}
+.tasknow b{color:var(--text)}
+.tasknow .over{color:#e8a13c}
+.tasknow:hover{color:var(--accent)}
+.interrupts{display:flex;justify-content:center;gap:8px}
+.it-btn{
+  padding:5px 11px;border-radius:999px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);font-size:12px;cursor:pointer;
+  transition:border-color .2s,color .2s,opacity .2s;
+}
+.it-btn b{color:var(--accent);margin-left:2px;font-variant-numeric:tabular-nums}
+.it-btn:hover{border-color:var(--accent);color:var(--accent)}
+.it-btn.off{opacity:.45}
+.it-btn.pulse{animation:itpulse .35s ease}
+@keyframes itpulse{0%{transform:scale(1)}50%{transform:scale(1.14)}100%{transform:scale(1)}}
 footer{text-align:center;font-size:12px;color:var(--muted)}
 
 /* ---------- 舒尔特方格 ---------- */
@@ -185,6 +203,38 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
 .stats-total{font-size:12px;color:var(--muted);line-height:1.7}
 .stats-io{width:100%;height:76px;padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:12px;font-family:ui-monospace,Consolas,monospace;resize:none}
 .stats-hint{font-size:11px;color:var(--muted);text-align:center}
+.task-add{display:flex;gap:8px;align-items:center}
+.task-add input{
+  padding:9px 11px;border-radius:10px;border:1px solid var(--line);
+  background:transparent;color:var(--text);font-size:13px;outline:none;min-width:0;
+}
+.task-add input:focus{border-color:var(--accent)}
+.task-add #taskTitle{flex:1}
+.task-add #taskEst{width:58px;text-align:center;flex:none}
+.task-add button{
+  padding:9px 14px;border-radius:10px;border:1px solid var(--line);
+  background:transparent;color:var(--text);font-size:13px;cursor:pointer;flex:none;
+}
+.task-add button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.task-list{display:flex;flex-direction:column;gap:8px;max-height:44vh;overflow:auto}
+.task-empty{text-align:center;font-size:13px;color:var(--muted);padding:18px 0}
+.task-item{display:flex;align-items:center;gap:6px;background:var(--soft);border-radius:12px;padding:6px 8px}
+.task-item.active{box-shadow:inset 0 0 0 2px var(--accent)}
+.task-pick{
+  flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border:0;background:transparent;color:var(--text);text-align:left;
+  padding:6px 4px;font-size:14px;cursor:pointer;
+}
+.task-pick .t-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task-pick .t-meta{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.task-pick .t-meta.over{color:#e8a13c}
+.task-item.done .t-title{text-decoration:line-through;color:var(--muted)}
+.task-item .t-icon{
+  flex:none;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);cursor:pointer;font-size:13px;line-height:1;
+}
+.task-item .t-icon:hover{color:var(--accent);border-color:var(--accent)}
+.task-summary{font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
 </style>
 </head>
 <body>
@@ -210,6 +260,11 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
     </div>
   </div>
   <div class="quote" id="quote">准备好了吗？点击「开始」🍅</div>
+  <div class="tasknow" id="taskNow" title="打开今日待办">当前任务：未选择 · 点击打开今日待办</div>
+  <div class="interrupts">
+    <button class="it-btn off" id="btnInner" title="记录一次内部中断（走神、想看手机……），番茄继续">🧠 走神 <b id="cntInner">0</b></button>
+    <button class="it-btn off" id="btnOuter" title="记录一次外部中断（有人找你、来电……），番茄继续">📞 被打扰 <b id="cntOuter">0</b></button>
+  </div>
   <div class="goal"><input id="goal" placeholder="🎯 今天最重要的一件事…" maxlength="60"></div>
   <div class="controls">
     <button id="reset" title="重置 (R)">重置</button>
@@ -222,6 +277,7 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
     <button id="chipNoise" class="chip">🌊 白噪音</button>
     <button id="chipFull" class="chip" title="全屏 (F)">全屏</button>
     <button id="chipSchulte" class="chip" title="专注力测试">🎯 舒尔特测试</button>
+    <button id="chipTasks" class="chip" title="今日待办、番茄预估与完成情况">📋 任务</button>
     <button id="chipStats" class="chip" title="专注统计与数据备份">📊 统计</button>
   </div>
   <div class="durations">
@@ -282,6 +338,25 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
   </div>
 </div>
 
+<!-- 今日待办弹层 -->
+<div class="overlay" id="taskPanel" hidden>
+  <div class="schulte-card">
+    <div class="s-head">
+      <h2>📋 今日待办</h2>
+      <button class="s-close" id="taskClose" title="关闭 (Esc)">✕</button>
+    </div>
+    <p class="s-tip">每个任务预估 1~7 个番茄；完成的专注会自动记在当前任务上</p>
+    <div class="task-add">
+      <input id="taskTitle" maxlength="40" placeholder="要完成的任务…">
+      <input id="taskEst" type="number" min="1" max="7" value="1" title="预计番茄数">
+      <button id="taskAdd" class="primary">添加</button>
+    </div>
+    <div class="task-list" id="taskList"></div>
+    <div class="task-summary" id="taskSummary"></div>
+    <p class="stats-hint">一个番茄不可分割；被彻底打断就按 R 作废重来，不要算半个番茄</p>
+  </div>
+</div>
+
 <script>
 'use strict'
 const $ = id => document.getElementById(id)
@@ -289,8 +364,10 @@ const el = {
   time: $('time'), phase: $('phase'), dots: $('dots'), stats: $('stats'), quote: $('quote'),
   main: $('main'), reset: $('reset'), skip: $('skip'), tabs: $('tabs'),
   ringFg: $('ringFg'), goal: $('goal'),
+  taskNow: $('taskNow'), btnInner: $('btnInner'), btnOuter: $('btnOuter'),
+  cntInner: $('cntInner'), cntOuter: $('cntOuter'),
   chipAuto: $('chipAuto'), chipSound: $('chipSound'), chipNoise: $('chipNoise'), chipFull: $('chipFull'),
-  chipSchulte: $('chipSchulte'), chipStats: $('chipStats'),
+  chipSchulte: $('chipSchulte'), chipTasks: $('chipTasks'), chipStats: $('chipStats'),
   dFocus: $('dFocus'), dShort: $('dShort'), dLong: $('dLong'),
   schulte: $('schulte'), sGrid: $('sGrid'), sTimer: $('sTimer'), sMistakes: $('sMistakes'),
   sResult: $('sResult'), sBest: $('sBest'), sAgain: $('sAgain'), sGo: $('sGo'), sClose: $('sClose'),
@@ -298,6 +375,8 @@ const el = {
   statsPanel: $('statsPanel'), statsSummary: $('statsSummary'), statsBars: $('statsBars'),
   statsTotal: $('statsTotal'), statsIO: $('statsIO'), statsClose: $('statsClose'),
   statsExport: $('statsExport'), statsImport: $('statsImport'),
+  taskPanel: $('taskPanel'), taskClose: $('taskClose'), taskTitle: $('taskTitle'),
+  taskEst: $('taskEst'), taskAdd: $('taskAdd'), taskList: $('taskList'), taskSummary: $('taskSummary'),
 }
 
 const MODES = {
@@ -330,8 +409,11 @@ let mode = 'focus'
 let running = false
 let endTime = 0
 let remaining = settings.focus * 60
+let sessionTotal = remaining // 本轮开始时的总时长（秒）；计时中途修改时长只影响下一轮
 let timerId = null
 let cyclePos = 0 // 本循环内已完成的专注数 0-4
+let sessionInner = 0 // 本轮专注内记录的内部中断数
+let sessionOuter = 0 // 本轮专注内记录的外部中断数
 
 function todayKey() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() }
 // 每日专注记录：history['YYYY-M-D'] = { count: 番茄数, minutes: 专注分钟 }
@@ -345,6 +427,57 @@ try {
 } catch (e) {}
 function saveHistory() { save('pomo.history', history) }
 let today = history[todayKey()] || { count: 0, minutes: 0 }
+
+/* ---------- 今日待办（计划 + 番茄预估 + 实际投入） ---------- */
+function newTaskId() { return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) }
+function normalizeTasks(doc) {
+  const out = { date: todayKey(), items: [] }
+  if (!doc || !Array.isArray(doc.items)) return out
+  const sameDay = doc.date === out.date
+  doc.items.forEach(it => {
+    if (!it || typeof it.title !== 'string') return
+    const title = it.title.trim().slice(0, 40)
+    if (!title) return
+    if (!sameDay && it.done) return // 跨天只顺延未完成的任务
+    out.items.push({
+      id: typeof it.id === 'string' && it.id ? it.id : newTaskId(),
+      title: title,
+      est: Math.min(7, Math.max(1, parseInt(it.est, 10) || 1)),
+      pomos: Math.max(0, parseInt(it.pomos, 10) || 0),
+      done: !!it.done,
+    })
+  })
+  return out
+}
+let tasksDoc = normalizeTasks(load('pomo.tasks', { date: todayKey(), items: [] }))
+let activeTaskId = ''
+try { activeTaskId = localStorage.getItem('pomo.activeTask') || '' } catch (e) {}
+function saveTasks() { save('pomo.tasks', tasksDoc) }
+saveTasks()
+function activeTask() { return tasksDoc.items.find(t => t.id === activeTaskId && !t.done) || null }
+if (activeTaskId && !activeTask()) {
+  activeTaskId = ''
+  try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
+}
+let sessionTaskId = activeTaskId // 本轮专注归属的任务；中途勾完成也不改变本轮归属
+let todayStamp = todayKey()
+function ensureToday() {
+  const k = todayKey()
+  if (k === todayStamp) return
+  todayStamp = k
+  today = history[k] || { count: 0, minutes: 0 }
+  // 新的一天：未完成任务顺延，已完成的归档
+  tasksDoc = { date: k, items: tasksDoc.items.filter(t => !t.done) }
+  saveTasks()
+  if (activeTaskId && !activeTask()) {
+    activeTaskId = ''
+    try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
+  }
+  if (sessionTaskId && !tasksDoc.items.some(t => t.id === sessionTaskId)) sessionTaskId = ''
+  renderTaskNow()
+  renderTaskList()
+  render()
+}
 
 /* ---------- 音频 ---------- */
 let actx = null
@@ -468,11 +601,18 @@ function fmt(s) {
 }
 function switchTo(m) {
   mode = m
-  remaining = total()
+  sessionTotal = total()
+  remaining = sessionTotal
+  sessionInner = 0
+  sessionOuter = 0
+  sessionTaskId = m === 'focus' ? activeTaskId : ''
   render()
+  renderTaskNow()
 }
 function start(bypass) {
   if (running) return
+  ensureToday()
+  if (mode === 'focus' && remaining >= sessionTotal) sessionTaskId = activeTaskId
   if (!bypass && mode === 'focus' && settings.schulte) { sOpen(true); return }
   audio()
   try {
@@ -495,8 +635,14 @@ function pause() {
 function toggle() { running ? pause() : start() }
 function reset() {
   if (running) pause()
-  remaining = total()
+  ensureToday()
+  sessionTotal = total()
+  remaining = sessionTotal
+  sessionInner = 0
+  sessionOuter = 0
+  sessionTaskId = mode === 'focus' ? activeTaskId : ''
   render()
+  renderTaskNow()
 }
 function nextMode() { return mode === 'focus' ? 'short' : 'focus' }
 function skip() {
@@ -507,12 +653,14 @@ function skip() {
   if (was) start(true)
 }
 function tick() {
+  ensureToday()
   const left = Math.max(0, Math.round((endTime - Date.now()) / 1000))
   remaining = left
   render()
   if (left <= 0) complete()
 }
 function complete() {
+  ensureToday()
   running = false
   clearInterval(timerId); timerId = null
   remaining = 0
@@ -524,10 +672,18 @@ function complete() {
     const k = todayKey()
     const rec = history[k] || { count: 0, minutes: 0 }
     rec.count++
-    rec.minutes += settings.focus
+    rec.minutes += Math.round(sessionTotal / 60) // 按本轮实际时长记账，避免中途改设置虚增
     history[k] = rec
     today = rec
     saveHistory()
+    const t = tasksDoc.items.find(x => x.id === sessionTaskId)
+    if (t) {
+      t.pomos++
+      saveTasks()
+      renderTaskNow()
+      if (!el.taskPanel.hidden) renderTaskList()
+      if (t.pomos === t.est && !t.done) toast('「' + t.title + '」已达到预估番茄数，完成了吗？')
+    }
     notice('专注完成！', '已完成 ' + today.count + ' 个番茄，休息一下吧 ☕')
   } else if (finished === 'long') {
     cyclePos = 0
@@ -540,7 +696,7 @@ function complete() {
   if (settings.auto) start()
 }
 function render() {
-  const t = total()
+  const t = sessionTotal
   const left = running ? Math.max(0, Math.round((endTime - Date.now()) / 1000)) : remaining
   el.time.textContent = fmt(left)
   el.phase.textContent = MODES[mode].name
@@ -557,7 +713,179 @@ function render() {
     el.dots.appendChild(s)
   }
   document.title = fmt(left) + ' ' + MODES[mode].name + ' · 番茄钟'
+  renderInterrupts()
   postState(left)
+}
+
+/* ---------- 今日待办与中断记录 ---------- */
+function focusInProgress() { return mode === 'focus' && (running || remaining < sessionTotal) }
+function renderTaskNow() {
+  el.taskNow.innerHTML = ''
+  const t = activeTask()
+  if (t) {
+    el.taskNow.append('当前任务：')
+    const b = document.createElement('b')
+    b.textContent = t.title
+    el.taskNow.append(b)
+    const meta = document.createElement('span')
+    meta.className = t.pomos > t.est ? 'over' : ''
+    meta.textContent = ' · 🍅 ' + t.pomos + '/' + t.est
+    el.taskNow.append(meta)
+    return
+  }
+  // 任务中途勾了完成，本轮专注仍归属它，直到本轮结束
+  const st = sessionTaskId && focusInProgress() ? tasksDoc.items.find(x => x.id === sessionTaskId) : null
+  if (st) {
+    el.taskNow.append('本轮计入：')
+    const b = document.createElement('b')
+    b.textContent = st.title
+    el.taskNow.append(b)
+    const meta = document.createElement('span')
+    meta.textContent = ' · 已完成'
+    el.taskNow.append(meta)
+    return
+  }
+  el.taskNow.textContent = '当前任务：未选择 · 点击打开今日待办'
+}
+function renderTaskList() {
+  el.taskList.innerHTML = ''
+  const items = tasksDoc.items.slice().sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0))
+  if (!items.length) {
+    const empty = document.createElement('div')
+    empty.className = 'task-empty'
+    empty.textContent = '还没有任务，先写下今天要完成的事吧'
+    el.taskList.appendChild(empty)
+  }
+  items.forEach(t => {
+    const row = document.createElement('div')
+    row.className = 'task-item' + (t.done ? ' done' : '') + (t.id === activeTaskId && !t.done ? ' active' : '')
+    row.dataset.id = t.id
+    const pick = document.createElement('button')
+    pick.className = 'task-pick'
+    pick.dataset.act = 'pick'
+    pick.title = t.done ? '已完成' : '点击设为当前任务'
+    const title = document.createElement('span')
+    title.className = 't-title'
+    title.textContent = t.title
+    const meta = document.createElement('span')
+    meta.className = 't-meta' + (t.pomos > t.est ? ' over' : '')
+    meta.textContent = '🍅 ' + t.pomos + '/' + t.est
+    pick.append(title, meta)
+    const doneBtn = document.createElement('button')
+    doneBtn.className = 't-icon'
+    doneBtn.dataset.act = 'done'
+    doneBtn.title = t.done ? '恢复未完成' : '标记完成'
+    doneBtn.textContent = t.done ? '↩' : '✓'
+    const delBtn = document.createElement('button')
+    delBtn.className = 't-icon'
+    delBtn.dataset.act = 'del'
+    delBtn.title = '删除任务'
+    delBtn.textContent = '✕'
+    row.append(pick, doneBtn, delBtn)
+    el.taskList.appendChild(row)
+  })
+  const open = tasksDoc.items.filter(t => !t.done)
+  const est = open.reduce((a, t) => a + t.est, 0)
+  const spent = open.reduce((a, t) => a + t.pomos, 0)
+  el.taskSummary.textContent = open.length
+    ? '未完成 ' + open.length + ' 项 · 已投入 ' + spent + ' 个番茄 · 预计还需 ' + Math.max(0, est - spent) + ' 个'
+    : (tasksDoc.items.length ? '今日任务已全部完成 🎉' : '')
+}
+function assignActiveTask(id) {
+  activeTaskId = id || ''
+  try {
+    if (activeTaskId) localStorage.setItem('pomo.activeTask', activeTaskId)
+    else localStorage.removeItem('pomo.activeTask')
+  } catch (e) {}
+  // 专注进行中切换当前任务时，本轮番茄随之归到新任务
+  if (mode === 'focus') sessionTaskId = activeTaskId
+  renderTaskNow()
+  renderTaskList()
+}
+function setActiveTask(id) { assignActiveTask(activeTaskId === id ? '' : id) }
+function addTask() {
+  ensureToday()
+  const title = el.taskTitle.value.trim().slice(0, 40)
+  if (!title) { el.taskTitle.focus(); return }
+  let est = parseInt(el.taskEst.value, 10)
+  if (isNaN(est) || est < 1) est = 1
+  if (est > 7) { est = 7; toast('超过 7 个番茄的任务，建议拆成小任务') }
+  const t = { id: newTaskId(), title: title, est: est, pomos: 0, done: false }
+  tasksDoc.items.push(t)
+  saveTasks()
+  if (!activeTask()) assignActiveTask(t.id)
+  el.taskTitle.value = ''
+  el.taskEst.value = 1
+  renderTaskNow()
+  renderTaskList()
+  el.taskTitle.focus()
+}
+function taskSetDone(t, done) {
+  let keepSession = false
+  t.done = done
+  if (done && activeTaskId === t.id) {
+    keepSession = focusInProgress()
+    activeTaskId = ''
+    try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
+    if (!keepSession) sessionTaskId = ''
+  }
+  saveTasks()
+  renderTaskNow()
+  renderTaskList()
+  if (done) {
+    if (keepSession) toast('任务完成 🎉 本轮专注仍会计入它')
+    else toast(t.pomos >= t.est ? '任务完成 🎉 达到预估番茄数' : '任务完成 🎉 剩余时间用来检查回顾')
+  }
+}
+function taskDelete(t) {
+  if (!confirm('删除任务「' + t.title + '」？')) return
+  tasksDoc.items = tasksDoc.items.filter(x => x.id !== t.id)
+  if (activeTaskId === t.id) {
+    activeTaskId = ''
+    try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
+  }
+  if (sessionTaskId === t.id) sessionTaskId = ''
+  saveTasks()
+  renderTaskNow()
+  renderTaskList()
+}
+function tasksOpen() {
+  ensureToday()
+  el.taskPanel.hidden = false
+  renderTaskList()
+  renderTaskNow()
+}
+function tasksClose() { el.taskPanel.hidden = true }
+function renderInterrupts() {
+  el.cntInner.textContent = sessionInner
+  el.cntOuter.textContent = sessionOuter
+  const on = focusInProgress()
+  el.btnInner.classList.toggle('off', !on)
+  el.btnOuter.classList.toggle('off', !on)
+}
+function logInterrupt(kind) {
+  ensureToday()
+  if (!focusInProgress()) {
+    toast('专注进行中才能记录中断')
+    return
+  }
+  const key = todayKey()
+  const rec = history[key] || { count: 0, minutes: 0 }
+  rec[kind] = (rec[kind] || 0) + 1
+  history[key] = rec
+  today = rec
+  saveHistory()
+  if (kind === 'inner') sessionInner++
+  else sessionOuter++
+  const btn = kind === 'inner' ? el.btnInner : el.btnOuter
+  btn.classList.remove('pulse')
+  void btn.offsetWidth
+  btn.classList.add('pulse')
+  renderInterrupts()
+  el.quote.textContent = kind === 'inner'
+    ? '已记录一次走神，把注意力拉回来，继续 🧠'
+    : '已记录一次打扰，先记下来，休息时再处理 📞'
+  if (!el.statsPanel.hidden) renderStats()
 }
 
 /* ---------- 舒尔特方格 ---------- */
@@ -719,10 +1047,14 @@ function renderStats() {
   const days = lastNDays(7)
   const week = days.reduce((a, d) => a + d.minutes, 0)
   const weekCount = days.reduce((a, d) => a + d.count, 0)
+  const weekInner = days.reduce((a, d) => a + (d.inner || 0), 0)
+  const weekOuter = days.reduce((a, d) => a + (d.outer || 0), 0)
   let totalMin = 0, totalCount = 0, daysActive = 0
   for (const k in history) { totalMin += history[k].minutes || 0; totalCount += history[k].count || 0; daysActive++ }
   el.statsSummary.innerHTML = '今日：<b>' + today.minutes + '</b> 分钟 · ' + today.count + ' 个番茄<br>' +
-    '近 7 天：' + week + ' 分钟 · ' + weekCount + ' 个番茄'
+    '今日中断：🧠 ' + (today.inner || 0) + ' 次 · 📞 ' + (today.outer || 0) + ' 次<br>' +
+    '近 7 天：' + week + ' 分钟 · ' + weekCount + ' 个番茄<br>' +
+    '近 7 天中断：🧠 ' + weekInner + ' 次 · 📞 ' + weekOuter + ' 次'
   el.statsTotal.textContent = '累计：' + totalMin + ' 分钟（约 ' + (totalMin / 60).toFixed(1) + ' 小时）· ' + totalCount + ' 个番茄 · ' + daysActive + ' 天有记录 · 连续 ' + streakDays() + ' 天'
   const max = Math.max(1, ...days.map(d => d.minutes))
   el.statsBars.innerHTML = ''
@@ -744,6 +1076,7 @@ function renderStats() {
   })
 }
 function statsOpen() {
+  ensureToday()
   el.statsPanel.hidden = false
   el.statsIO.value = ''
   renderStats()
@@ -753,6 +1086,7 @@ function statsExport() {
   const data = {
     app: 'pomodoro-tray', exportedAt: new Date().toISOString(),
     history, settings: Object.assign({}, settings, { noise: false }), schulteBest: schulte.best,
+    tasks: tasksDoc, activeTask: activeTaskId,
   }
   el.statsIO.value = JSON.stringify(data)
   el.statsIO.select()
@@ -778,9 +1112,22 @@ function statsImport() {
     save('pomo.settings', settings)
   }
   if (data.schulteBest && typeof data.schulteBest === 'object') { schulte.best = data.schulteBest; save('pomo.schulte', schulte.best) }
+  if (data.tasks && Array.isArray(data.tasks.items)) {
+    tasksDoc = normalizeTasks(data.tasks)
+    saveTasks()
+    activeTaskId = (typeof data.activeTask === 'string' && tasksDoc.items.some(t => t.id === data.activeTask && !t.done)) ? data.activeTask : ''
+    try {
+      if (activeTaskId) localStorage.setItem('pomo.activeTask', activeTaskId)
+      else localStorage.removeItem('pomo.activeTask')
+    } catch (e) {}
+    if (mode === 'focus') sessionTaskId = activeTaskId
+  }
   today = history[todayKey()] || { count: 0, minutes: 0 }
   el.dFocus.value = settings.focus; el.dShort.value = settings.short; el.dLong.value = settings.long
+  if (!running && remaining >= sessionTotal) { sessionTotal = total(); remaining = sessionTotal }
   render()
+  renderTaskNow()
+  renderTaskList()
   renderStats()
   toast('导入成功')
 }
@@ -788,6 +1135,35 @@ el.chipStats.addEventListener('click', statsOpen)
 el.statsClose.addEventListener('click', statsClose)
 el.statsExport.addEventListener('click', statsExport)
 el.statsImport.addEventListener('click', statsImport)
+
+/* ---------- 今日待办事件 ---------- */
+el.chipTasks.addEventListener('click', tasksOpen)
+el.taskClose.addEventListener('click', tasksClose)
+el.taskAdd.addEventListener('click', addTask)
+el.taskTitle.addEventListener('keydown', e => { if (e.key === 'Enter') addTask() })
+el.taskEst.addEventListener('keydown', e => { if (e.key === 'Enter') addTask() })
+el.taskList.addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]')
+  if (!btn) return
+  const row = btn.closest('.task-item')
+  if (!row) return
+  const t = tasksDoc.items.find(x => x.id === row.dataset.id)
+  if (!t) return
+  if (btn.dataset.act === 'pick') {
+    if (!t.done) setActiveTask(t.id)
+  } else if (btn.dataset.act === 'done') {
+    taskSetDone(t, !t.done)
+  } else if (btn.dataset.act === 'del') {
+    taskDelete(t)
+  }
+})
+el.taskNow.addEventListener('click', () => {
+  if (schulte.open) { toast('先关闭舒尔特测试'); return }
+  if (!el.statsPanel.hidden) statsClose()
+  tasksOpen()
+})
+el.btnInner.addEventListener('click', () => logInterrupt('inner'))
+el.btnOuter.addEventListener('click', () => logInterrupt('outer'))
 
 /* ---------- 事件 ---------- */
 el.main.addEventListener('click', toggle)
@@ -797,9 +1173,7 @@ el.tabs.addEventListener('click', e => {
   const b = e.target.closest('button')
   if (!b) return
   if (running) pause()
-  mode = b.dataset.mode
-  remaining = total()
-  render()
+  switchTo(b.dataset.mode)
 })
 function chip(btn, active, onClick) {
   btn.classList.toggle('active', active)
@@ -834,7 +1208,17 @@ function bindDur(input, key) {
     input.value = v
     settings[key] = v
     save('pomo.settings', settings)
-    if (mode === key && !running) { remaining = total(); render() }
+    if (mode !== key) return
+    // 本轮还没开始计时：直接按新时长刷新
+    if (!running && remaining >= sessionTotal) {
+      sessionTotal = total()
+      remaining = sessionTotal
+      render()
+      return
+    }
+    // 已经开始（运行中或暂停中）：本轮保持原时长，设置从下一轮生效，
+    // 否则会出现倒计时、进度环、统计各自按不同时长计算的错乱
+    toast('时长已保存，将从下一轮「' + MODES[key].name + '」开始生效')
   })
 }
 bindDur(el.dFocus, 'focus')
@@ -851,9 +1235,10 @@ document.addEventListener('keydown', e => {
   if (tag === 'BUTTON' && (e.code === 'Space' || e.code === 'Enter')) return
   if (e.code === 'Escape') {
     if (schulte.open) { sClose(); return }
+    if (!el.taskPanel.hidden) { tasksClose(); return }
     if (!el.statsPanel.hidden) { statsClose(); return }
   }
-  if (schulte.open || !el.statsPanel.hidden) return
+  if (schulte.open || !el.statsPanel.hidden || !el.taskPanel.hidden) return
   if (e.code === 'Space') { e.preventDefault(); toggle() }
   else if (e.code === 'KeyR') reset()
   else if (e.code === 'KeyS') skip()
@@ -865,6 +1250,8 @@ document.addEventListener('keydown', e => {
 document.addEventListener('visibilitychange', () => { if (!document.hidden && running) tick() })
 
 render()
+renderTaskNow()
+renderTaskList()
 </script>
 </body>
 </html>
