@@ -4,14 +4,24 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Live demo](https://img.shields.io/badge/demo-live-2f9e6e.svg)](https://chen0521yuxuan.github.io/pomodoro-tray/)
+[![Release](https://img.shields.io/github/v/release/chen0521yuxuan/pomodoro-tray?color=e5484d)](https://github.com/chen0521yuxuan/pomodoro-tray/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Web-e5484d.svg)](#)
 [![Bilingual UI](https://img.shields.io/badge/UI-中文%20%7C%20English-2f9e6e.svg)](#)
 [![GitHub stars](https://img.shields.io/github/stars/chen0521yuxuan/pomodoro-tray?style=social)](https://github.com/chen0521yuxuan/pomodoro-tray/stargazers)
 
 <p align="center">
+  <img src="screenshots/demo.gif" width="56%" alt="11-second demo: 中文/English switch, tasks, interruption logging and stats">
+</p>
+
+<p align="center"><sub>11-second demo · 11 秒演示：中文 / English · tasks · interruptions · stats</sub></p>
+
+<details>
+<summary>More screenshots · 更多截图</summary>
+<p align="center">
   <img src="screenshots/en.png" width="46%" alt="English interface">
   <img src="screenshots/zh-CN.png" width="46%" alt="中文界面">
 </p>
+</details>
 
 ---
 
