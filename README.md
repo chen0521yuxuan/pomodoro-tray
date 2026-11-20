@@ -3,6 +3,7 @@
 [English](#english) · [简体中文](#简体中文)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Live demo](https://img.shields.io/badge/demo-live-2f9e6e.svg)](https://chen0521yuxuan.github.io/pomodoro-tray/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Web-e5484d.svg)](#)
 [![Bilingual UI](https://img.shields.io/badge/UI-中文%20%7C%20English-2f9e6e.svg)](#)
 [![GitHub stars](https://img.shields.io/github/stars/chen0521yuxuan/pomodoro-tray?style=social)](https://github.com/chen0521yuxuan/pomodoro-tray/stargazers)
@@ -38,7 +39,7 @@ Switch the entire UI — including the tray menu and notifications — between *
 
 **Web version (zero install)**
 
-Download or clone the repo and open `番茄钟.html` in any modern browser. Everything except the native tray works.
+Try the [live demo](https://chen0521yuxuan.github.io/pomodoro-tray/), or open `番茄钟.html` from the repo in any modern browser. Everything except the native tray works.
 
 **Desktop tray version (Electron, Windows tested)**
 
@@ -93,6 +94,7 @@ npm start
 | File | Purpose |
 | --- | --- |
 | `番茄钟.html` | The entire web app: UI, styles, timer, tasks, stats, Schulte grid, i18n |
+| `index.html` | GitHub Pages entry that opens the app |
 | `main.js` | Electron main process: window, tray, notifications, IPC bridge |
 | `preload.js` | Safe `contextBridge` between the page and Electron |
 | `gen-icon.js` | Tomato icon generator (PNG/ICO, no dependencies) |
@@ -140,7 +142,7 @@ Issues and pull requests are welcome. If this project saves you some focus time,
 
 **网页版（零依赖）**
 
-下载或克隆仓库后，直接用浏览器打开 `番茄钟.html`。除系统托盘外功能完整。
+试试[在线演示](https://chen0521yuxuan.github.io/pomodoro-tray/)，或下载后用浏览器打开 `番茄钟.html`。除系统托盘外功能完整。
 
 **桌面托盘版（Electron，Windows 已测试）**
 
@@ -195,6 +197,7 @@ npm start
 | 文件 | 说明 |
 | --- | --- |
 | `番茄钟.html` | 完整网页应用：界面、样式、计时、任务、统计、舒尔特方格、中英双语 |
+| `index.html` | GitHub Pages 入口页，跳转到应用 |
 | `main.js` | Electron 主进程：窗口、托盘、通知、IPC 桥接 |
 | `preload.js` | 页面与 Electron 之间的安全 `contextBridge` |
 | `gen-icon.js` | 番茄图标生成器（PNG/ICO，零依赖） |
