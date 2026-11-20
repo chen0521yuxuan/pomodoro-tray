@@ -17,7 +17,9 @@ if (!app) {
 let win = null
 let tray = null
 let quitting = false
-let state = { running: false, remaining: 0, label: '专注', mode: 'focus' }
+let state = { running: false, remaining: 0, label: '专注', mode: 'focus', lang: 'zh' }
+
+function L(zh, en) { return state.lang === 'en' ? en : zh }
 
 function htmlPath() { return path.join(__dirname, '番茄钟.html') }
 function icon256() { return path.join(__dirname, 'tomato.png') }
@@ -35,7 +37,7 @@ function createWindow() {
     height: 900,
     minWidth: 420,
     minHeight: 640,
-    title: '番茄钟',
+    title: '番茄钟 · Pomodoro',
     autoHideMenuBar: true,
     icon: icon256(),
     backgroundColor: '#f5f3ee',
@@ -52,7 +54,7 @@ function createWindow() {
     if (!quitting) {
       e.preventDefault()
       win.hide()
-      showOnceBalloon('番茄钟仍在后台运行，右键托盘图标可退出')
+      showOnceBalloon(L('番茄钟仍在后台运行，右键托盘图标可退出', 'Pomodoro is still running in the background. Right-click the tray icon to quit.'))
     }
   })
   win.on('show', rebuildMenu)
@@ -62,7 +64,7 @@ function createWindow() {
 function createTray() {
   const icon = nativeImage.createFromPath(icon32())
   tray = new Tray(icon)
-  tray.setToolTip('番茄钟')
+  tray.setToolTip('番茄钟 · Pomodoro')
   tray.on('click', toggleWindow)
   tray.on('double-click', toggleWindow)
   rebuildMenu()
@@ -75,6 +77,7 @@ function createTray() {
           remaining: msg.remaining | 0,
           label: msg.label || '专注',
           mode: msg.mode || 'focus',
+          lang: msg.lang === 'en' ? 'en' : 'zh',
         }
         updateTrayTooltip()
         rebuildMenu()
@@ -88,20 +91,20 @@ function createTray() {
 function rebuildMenu() {
   if (!tray) return
   const menu = Menu.buildFromTemplate([
-    { label: state.running ? '暂停' : '开始', click: () => cmd(state.running ? 'pause' : 'start') },
-    { label: '跳过', click: () => cmd('skip') },
+    { label: state.running ? L('暂停', 'Pause') : L('开始', 'Start'), click: () => cmd(state.running ? 'pause' : 'start') },
+    { label: L('跳过', 'Skip'), click: () => cmd('skip') },
     { type: 'separator' },
-    { label: win && win.isVisible() ? '隐藏窗口' : '显示窗口', click: toggleWindow },
+    { label: win && win.isVisible() ? L('隐藏窗口', 'Hide window') : L('显示窗口', 'Show window'), click: toggleWindow },
     { type: 'separator' },
-    { label: '退出', click: () => { quitting = true; app.quit() } },
+    { label: L('退出', 'Quit'), click: () => { quitting = true; app.quit() } },
   ])
   tray.setContextMenu(menu)
 }
 
 function updateTrayTooltip() {
   if (!tray) return
-  const suffix = state.running ? '' : '（已暂停）'
-  tray.setToolTip('番茄钟 · ' + state.label + ' ' + fmt(state.remaining) + suffix)
+  const suffix = state.running ? '' : L('（已暂停）', ' (paused)')
+  tray.setToolTip(L('番茄钟', 'Pomodoro') + ' · ' + state.label + ' ' + fmt(state.remaining) + suffix)
 }
 
 function cmd(name) {
@@ -119,14 +122,20 @@ let balloonShown = false
 function showOnceBalloon(text) {
   if (balloonShown) return
   balloonShown = true
-  try { tray.displayBalloon({ title: '番茄钟', content: text }) } catch (err) {}
+  try { tray.displayBalloon({ title: L('番茄钟', 'Pomodoro'), content: text }) } catch (err) {}
 }
 
 function onDone(msg) {
-  let title = '休息结束'
-  let body = '开始专注吧 🍅'
-  if (msg.finished === 'focus') { title = '专注完成！'; body = '已完成 ' + (msg.count || 0) + ' 个番茄，休息一下吧 ☕' }
-  else if (msg.finished === 'long') { title = '长休息结束'; body = '开始新的一轮专注吧 🍅' }
+  const en = (msg.lang || state.lang) === 'en'
+  let title = en ? 'Break over' : '休息结束'
+  let body = en ? 'Time to focus 🍅' : '开始专注吧 🍅'
+  if (msg.finished === 'focus') {
+    title = en ? 'Focus complete!' : '专注完成！'
+    body = en ? '🍅 × ' + (msg.count || 0) + ' done — take a break ☕' : '已完成 ' + (msg.count || 0) + ' 个番茄，休息一下吧 ☕'
+  } else if (msg.finished === 'long') {
+    title = en ? 'Long break over' : '长休息结束'
+    body = en ? 'Ready for a new round? 🍅' : '开始新的一轮专注吧 🍅'
+  }
   // 窗口隐藏时由主进程发系统通知（可见时网页自己会弹）
   if (!win || !win.isVisible()) {
     try {
