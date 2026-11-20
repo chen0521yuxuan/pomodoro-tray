@@ -43,9 +43,16 @@ body{
   box-shadow:0 10px 36px rgba(0,0,0,.10);
   display:flex;flex-direction:column;gap:14px;
 }
-header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-h1{font-size:21px;font-weight:700}
-.stats{font-size:13px;color:var(--muted)}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1{font-size:21px;font-weight:700;white-space:nowrap}
+.head-right{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0}
+.stats{font-size:13px;color:var(--muted);text-align:right}
+.lang-btn{
+  flex:none;padding:4px 10px;border-radius:999px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);font-size:12px;font-weight:600;
+  cursor:pointer;transition:border-color .2s,color .2s;
+}
+.lang-btn:hover{border-color:var(--accent);color:var(--accent)}
 .tabs{display:flex;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
 .tabs button{
   flex:1;border:0;background:transparent;color:var(--muted);
@@ -240,13 +247,16 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
 <body>
 <div class="app">
   <header>
-    <h1>🍅 番茄钟</h1>
-    <div class="stats" id="stats"></div>
+    <h1 data-i18n="appTitle">🍅 番茄钟</h1>
+    <div class="head-right">
+      <div class="stats" id="stats"></div>
+      <button id="langBtn" class="lang-btn" title="切换语言 / Switch language">EN</button>
+    </div>
   </header>
   <nav class="tabs" id="tabs">
-    <button data-mode="focus" class="active">专注</button>
-    <button data-mode="short">短休息</button>
-    <button data-mode="long">长休息</button>
+    <button data-mode="focus" class="active" data-i18n="tabFocus">专注</button>
+    <button data-mode="short" data-i18n="tabShort">短休息</button>
+    <button data-mode="long" data-i18n="tabLong">长休息</button>
   </nav>
   <div class="ring-wrap">
     <svg class="ring" viewBox="0 0 280 280">
@@ -260,42 +270,42 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
     </div>
   </div>
   <div class="quote" id="quote">准备好了吗？点击「开始」🍅</div>
-  <div class="tasknow" id="taskNow" title="打开今日待办">当前任务：未选择 · 点击打开今日待办</div>
+  <div class="tasknow" id="taskNow" title="打开今日待办" data-i18n-title="taskNowTitle">当前任务：未选择 · 点击打开今日待办</div>
   <div class="interrupts">
-    <button class="it-btn off" id="btnInner" title="记录一次内部中断（走神、想看手机……），番茄继续">🧠 走神 <b id="cntInner">0</b></button>
-    <button class="it-btn off" id="btnOuter" title="记录一次外部中断（有人找你、来电……），番茄继续">📞 被打扰 <b id="cntOuter">0</b></button>
+    <button class="it-btn off" id="btnInner" title="记录一次内部中断（走神、想看手机……），番茄继续" data-i18n-title="interruptInnerTitle"><span data-i18n="interruptInner">🧠 走神</span> <b id="cntInner">0</b></button>
+    <button class="it-btn off" id="btnOuter" title="记录一次外部中断（有人找你、来电……），番茄继续" data-i18n-title="interruptOuterTitle"><span data-i18n="interruptOuter">📞 被打扰</span> <b id="cntOuter">0</b></button>
   </div>
-  <div class="goal"><input id="goal" placeholder="🎯 今天最重要的一件事…" maxlength="60"></div>
+  <div class="goal"><input id="goal" placeholder="🎯 今天最重要的一件事…" maxlength="60" data-i18n-placeholder="goalPlaceholder"></div>
   <div class="controls">
-    <button id="reset" title="重置 (R)">重置</button>
+    <button id="reset" title="重置 (R)" data-i18n="reset" data-i18n-title="resetTitle">重置</button>
     <button id="main" class="primary">开始</button>
-    <button id="skip" title="跳过 (S)">跳过</button>
+    <button id="skip" title="跳过 (S)" data-i18n="skip" data-i18n-title="skipTitle">跳过</button>
   </div>
   <div class="chips">
-    <button id="chipAuto" class="chip active" title="结束后自动开始下一阶段">⏭ 自动开始</button>
-    <button id="chipSound" class="chip active">🔔 提示音</button>
-    <button id="chipNoise" class="chip">🌊 白噪音</button>
-    <button id="chipFull" class="chip" title="全屏 (F)">全屏</button>
-    <button id="chipSchulte" class="chip" title="专注力测试">🎯 舒尔特测试</button>
-    <button id="chipTasks" class="chip" title="今日待办、番茄预估与完成情况">📋 任务</button>
-    <button id="chipStats" class="chip" title="专注统计与数据备份">📊 统计</button>
+    <button id="chipAuto" class="chip active" title="结束后自动开始下一阶段" data-i18n="autoStart" data-i18n-title="autoStartTitle">⏭ 自动开始</button>
+    <button id="chipSound" class="chip active" data-i18n="sound">🔔 提示音</button>
+    <button id="chipNoise" class="chip" data-i18n="noise">🌊 白噪音</button>
+    <button id="chipFull" class="chip" title="全屏 (F)" data-i18n="fullscreen" data-i18n-title="fullscreenTitle">全屏</button>
+    <button id="chipSchulte" class="chip" title="专注力测试" data-i18n="schulteChip" data-i18n-title="schulteChipTitle">🎯 舒尔特测试</button>
+    <button id="chipTasks" class="chip" title="今日待办、番茄预估与完成情况" data-i18n="tasksChip" data-i18n-title="tasksChipTitle">📋 任务</button>
+    <button id="chipStats" class="chip" title="专注统计与数据备份" data-i18n="statsChip" data-i18n-title="statsChipTitle">📊 统计</button>
   </div>
   <div class="durations">
-    <label>专注 <input type="number" id="dFocus" min="1" max="180"> 分</label>
-    <label>短休 <input type="number" id="dShort" min="1" max="60"> 分</label>
-    <label>长休 <input type="number" id="dLong" min="1" max="60"> 分</label>
+    <label><span data-i18n="durationFocus">专注</span> <input type="number" id="dFocus" min="1" max="180"> <span data-i18n="minutesShort">分</span></label>
+    <label><span data-i18n="durationShort">短休</span> <input type="number" id="dShort" min="1" max="60"> <span data-i18n="minutesShort">分</span></label>
+    <label><span data-i18n="durationLong">长休</span> <input type="number" id="dLong" min="1" max="60"> <span data-i18n="minutesShort">分</span></label>
   </div>
-  <footer>空格 开始/暂停 · R 重置 · S 跳过 · F 全屏</footer>
+  <footer data-i18n="footerHint">空格 开始/暂停 · R 重置 · S 跳过 · F 全屏</footer>
 </div>
 
 <!-- 舒尔特方格弹层 -->
 <div class="overlay" id="schulte" hidden>
   <div class="schulte-card">
     <div class="s-head">
-      <h2>🎯 舒尔特方格</h2>
-      <button class="s-close" id="sClose" title="关闭 (Esc)">✕</button>
+      <h2 data-i18n="schulteTitle">🎯 舒尔特方格</h2>
+      <button class="s-close" id="sClose" title="关闭 (Esc)" data-i18n-title="closeEsc">✕</button>
     </div>
-    <p class="s-tip">按 1 → N 的顺序依次点击数字，越快说明注意力越集中</p>
+    <p class="s-tip" data-i18n="schulteTip">按 1 → N 的顺序依次点击数字，越快说明注意力越集中</p>
     <div class="s-toolbar">
       <div class="s-sizes" id="sSizes">
         <button data-size="4">4×4</button>
@@ -303,7 +313,7 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
         <button data-size="6">6×6</button>
       </div>
       <div class="s-meters">
-        <button id="sRestart" class="s-mini">重来</button>
+        <button id="sRestart" class="s-mini" data-i18n="sRestart">重来</button>
         <span id="sTimer">0.0 s</span>
         <span id="sMistakes">错误 0</span>
       </div>
@@ -312,10 +322,10 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
     <div class="s-result" id="sResult" hidden></div>
     <div class="s-best" id="sBest"></div>
     <div class="s-actions">
-      <button id="sAgain" hidden>再测一次</button>
+      <button id="sAgain" hidden data-i18n="sAgain">再测一次</button>
       <button id="sGo" class="primary" hidden>开始专注 🍅</button>
     </div>
-    <label class="s-auto"><input type="checkbox" id="sAuto" checked> 每次开始专注前先测一测</label>
+    <label class="s-auto"><input type="checkbox" id="sAuto" checked> <span data-i18n="sAuto">每次开始专注前先测一测</span></label>
   </div>
 </div>
 
@@ -323,18 +333,18 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
 <div class="overlay" id="statsPanel" hidden>
   <div class="schulte-card">
     <div class="s-head">
-      <h2>📊 专注统计</h2>
-      <button class="s-close" id="statsClose" title="关闭 (Esc)">✕</button>
+      <h2 data-i18n="statsTitle">📊 专注统计</h2>
+      <button class="s-close" id="statsClose" title="关闭 (Esc)" data-i18n-title="closeEsc">✕</button>
     </div>
     <div class="stats-summary" id="statsSummary"></div>
     <div class="stats-bars" id="statsBars"></div>
     <div class="stats-total" id="statsTotal"></div>
-    <textarea class="stats-io" id="statsIO" placeholder="导出的备份会显示在这里；导入时把备份内容粘贴到这里" spellcheck="false"></textarea>
+    <textarea class="stats-io" id="statsIO" placeholder="导出的备份会显示在这里；导入时把备份内容粘贴到这里" data-i18n-placeholder="statsIOPlaceholder" spellcheck="false"></textarea>
     <div class="s-actions">
-      <button id="statsExport">📤 导出备份</button>
-      <button id="statsImport">📥 导入备份</button>
+      <button id="statsExport" data-i18n="statsExport">📤 导出备份</button>
+      <button id="statsImport" data-i18n="statsImport">📥 导入备份</button>
     </div>
-    <p class="stats-hint">数据只保存在本机，建议定期导出备份</p>
+    <p class="stats-hint" data-i18n="statsHint">数据只保存在本机，建议定期导出备份</p>
   </div>
 </div>
 
@@ -342,18 +352,18 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
 <div class="overlay" id="taskPanel" hidden>
   <div class="schulte-card">
     <div class="s-head">
-      <h2>📋 今日待办</h2>
-      <button class="s-close" id="taskClose" title="关闭 (Esc)">✕</button>
+      <h2 data-i18n="tasksTitle">📋 今日待办</h2>
+      <button class="s-close" id="taskClose" title="关闭 (Esc)" data-i18n-title="closeEsc">✕</button>
     </div>
-    <p class="s-tip">每个任务预估 1~7 个番茄；完成的专注会自动记在当前任务上</p>
+    <p class="s-tip" data-i18n="tasksTip">每个任务预估 1~7 个番茄；完成的专注会自动记在当前任务上</p>
     <div class="task-add">
-      <input id="taskTitle" maxlength="40" placeholder="要完成的任务…">
-      <input id="taskEst" type="number" min="1" max="7" value="1" title="预计番茄数">
-      <button id="taskAdd" class="primary">添加</button>
+      <input id="taskTitle" maxlength="40" placeholder="要完成的任务…" data-i18n-placeholder="taskTitlePlaceholder">
+      <input id="taskEst" type="number" min="1" max="7" value="1" title="预计番茄数" data-i18n-title="taskEstTitle">
+      <button id="taskAdd" class="primary" data-i18n="taskAdd">添加</button>
     </div>
     <div class="task-list" id="taskList"></div>
     <div class="task-summary" id="taskSummary"></div>
-    <p class="stats-hint">一个番茄不可分割；被彻底打断就按 R 作废重来，不要算半个番茄</p>
+    <p class="stats-hint" data-i18n="tasksHint">一个番茄不可分割；被彻底打断就按 R 作废重来，不要算半个番茄</p>
   </div>
 </div>
 
@@ -377,16 +387,193 @@ const el = {
   statsExport: $('statsExport'), statsImport: $('statsImport'),
   taskPanel: $('taskPanel'), taskClose: $('taskClose'), taskTitle: $('taskTitle'),
   taskEst: $('taskEst'), taskAdd: $('taskAdd'), taskList: $('taskList'), taskSummary: $('taskSummary'),
+  langBtn: $('langBtn'),
+}
+
+/* ---------- 中英双语 ---------- */
+const I18N = {
+  zh: {
+    appTitle: '🍅 番茄钟',
+    langToggleTitle: '切换语言 / Switch language',
+    tabFocus: '专注', tabShort: '短休息', tabLong: '长休息',
+    quoteReady: '准备好了吗？点击「开始」🍅',
+    taskNowCurrent: '当前任务：', taskNowSession: '本轮计入：', taskNowDone: ' · 已完成',
+    taskNowNone: '当前任务：未选择 · 点击打开今日待办', taskNowTitle: '打开今日待办',
+    interruptInner: '🧠 走神', interruptOuter: '📞 被打扰',
+    interruptInnerTitle: '记录一次内部中断（走神、想看手机……），番茄继续',
+    interruptOuterTitle: '记录一次外部中断（有人找你、来电……），番茄继续',
+    goalPlaceholder: '🎯 今天最重要的一件事…',
+    reset: '重置', resetTitle: '重置 (R)',
+    start: '开始', pause: '暂停', resume: '继续', skip: '跳过', skipTitle: '跳过 (S)',
+    autoStart: '⏭ 自动开始', autoStartTitle: '结束后自动开始下一阶段',
+    sound: '🔔 提示音', noise: '🌊 白噪音',
+    fullscreen: '全屏', fullscreenTitle: '全屏 (F)',
+    schulteChip: '🎯 舒尔特测试', schulteChipTitle: '专注力测试',
+    tasksChip: '📋 任务', tasksChipTitle: '今日待办、番茄预估与完成情况',
+    statsChip: '📊 统计', statsChipTitle: '专注统计与数据备份',
+    durationFocus: '专注', durationShort: '短休', durationLong: '长休', minutesShort: '分',
+    footerHint: '空格 开始/暂停 · R 重置 · S 跳过 · F 全屏',
+    closeEsc: '关闭 (Esc)',
+    schulteTitle: '🎯 舒尔特方格',
+    schulteTip: '按 1 → N 的顺序依次点击数字，越快说明注意力越集中',
+    sRestart: '重来', sMistakes: '错误 {n}',
+    sBest: '最佳 {size}×{size}：{value}',
+    sNoRecord: '暂无记录', sSeconds: '{value} 秒',
+    sAgain: '再测一次', sStartFocus: '开始专注 🍅', sClose: '关闭',
+    sAuto: '每次开始专注前先测一测',
+    ratingExcellent: '优秀', ratingGood: '良好', ratingFair: '一般', ratingPractice: '需要练习',
+    schulteResult: '用时 <b>{secs}</b> 秒 · 错误 {mistakes} 次',
+    newRecord: ' · 新纪录！🎉',
+    statsTitle: '📊 专注统计',
+    statsIOPlaceholder: '导出的备份会显示在这里；导入时把备份内容粘贴到这里',
+    statsExport: '📤 导出备份', statsImport: '📥 导入备份',
+    statsHint: '数据只保存在本机，建议定期导出备份',
+    statsToday: '今日：<b>{minutes}</b> 分钟 · {count} 个番茄',
+    statsTodayInterruptions: '今日中断：🧠 {inner} 次 · 📞 {outer} 次',
+    statsWeek: '近 7 天：{minutes} 分钟 · {count} 个番茄',
+    statsWeekInterruptions: '近 7 天中断：🧠 {inner} 次 · 📞 {outer} 次',
+    statsTotal: '累计：{minutes} 分钟（约 {hours} 小时）· {count} 个番茄 · {days} 天有记录 · 连续 {streak} 天',
+    statsBarTitle: '{date} 周{wd}：{minutes} 分钟',
+    copyOk: '已复制到剪贴板，也可手动复制下方内容',
+    copyFail: '复制失败，请手动选择并复制',
+    badBackup: '内容不是有效的备份数据',
+    missingHistory: '备份数据缺少 history 字段',
+    importOk: '导入成功',
+    tasksTitle: '📋 今日待办',
+    tasksTip: '每个任务预估 1~7 个番茄；完成的专注会自动记在当前任务上',
+    taskTitlePlaceholder: '要完成的任务…',
+    taskEstTitle: '预计番茄数', taskAdd: '添加',
+    tasksHint: '一个番茄不可分割；被彻底打断就按 R 作废重来，不要算半个番茄',
+    taskEmpty: '还没有任务，先写下今天要完成的事吧',
+    taskPickTitle: '点击设为当前任务', taskDoneTitle: '已完成', taskUndoneTitle: '恢复未完成',
+    taskMarkDone: '标记完成', taskDeleteTitle: '删除任务',
+    taskSummary: '未完成 {open} 项 · 已投入 {spent} 个番茄 · 预计还需 {left} 个',
+    allDone: '今日任务已全部完成 🎉',
+    tooManyEst: '超过 7 个番茄的任务，建议拆成小任务',
+    taskDoneKeep: '任务完成 🎉 本轮专注仍会计入它',
+    taskDoneAtEst: '任务完成 🎉 达到预估番茄数',
+    taskDoneReview: '任务完成 🎉 剩余时间用来检查回顾',
+    deleteConfirm: '删除任务「{title}」？',
+    interruptFocusOnly: '专注进行中才能记录中断',
+    interruptInnerMsg: '已记录一次走神，把注意力拉回来，继续 🧠',
+    interruptOuterMsg: '已记录一次打扰，先记下来，休息时再处理 📞',
+    closeSchulteFirst: '先关闭舒尔特测试',
+    completeFocusTitle: '专注完成！',
+    completeFocusBody: '已完成 {count} 个番茄，休息一下吧 ☕',
+    completeLongTitle: '长休息结束', completeLongBody: '开始新的一轮专注吧 🍅',
+    completeBreakTitle: '休息结束', completeBreakBody: '开始专注吧 🍅',
+    durationSaved: '时长已保存，将从下一轮「{mode}」开始生效',
+    taskEstReached: '「{title}」已达到预估番茄数，完成了吗？',
+    headerStats: '今天 🍅 × {count} · 专注 {minutes} 分钟',
+    pageTitle: '{time} {mode} · 番茄钟',
+    modeFocus: '专注', modeShort: '短休息', modeLong: '长休息',
+  },
+  en: {
+    appTitle: '🍅 Pomodoro',
+    langToggleTitle: 'Switch language / 切换语言',
+    tabFocus: 'Focus', tabShort: 'Short break', tabLong: 'Long break',
+    quoteReady: 'Ready? Hit Start 🍅',
+    taskNowCurrent: 'Current task: ', taskNowSession: 'This session: ', taskNowDone: ' · done',
+    taskNowNone: "Current task: none · click to open today's tasks", taskNowTitle: "Open today's tasks",
+    interruptInner: '🧠 Distracted', interruptOuter: '📞 Interrupted',
+    interruptInnerTitle: 'Log an internal distraction (mind wandering, phone urge…) — the timer keeps running',
+    interruptOuterTitle: 'Log an external interruption (someone, a call…) — the timer keeps running',
+    goalPlaceholder: '🎯 Your most important thing today…',
+    reset: 'Reset', resetTitle: 'Reset (R)',
+    start: 'Start', pause: 'Pause', resume: 'Resume', skip: 'Skip', skipTitle: 'Skip (S)',
+    autoStart: '⏭ Auto-start', autoStartTitle: 'Start the next phase automatically',
+    sound: '🔔 Chime', noise: '🌊 White noise',
+    fullscreen: 'Fullscreen', fullscreenTitle: 'Fullscreen (F)',
+    schulteChip: '🎯 Schulte test', schulteChipTitle: 'Attention test',
+    tasksChip: '📋 Tasks', tasksChipTitle: "Today's tasks, estimates and progress",
+    statsChip: '📊 Stats', statsChipTitle: 'Focus stats and backup',
+    durationFocus: 'Focus', durationShort: 'Short', durationLong: 'Long', minutesShort: 'min',
+    footerHint: 'Space start/pause · R reset · S skip · F fullscreen',
+    closeEsc: 'Close (Esc)',
+    schulteTitle: '🎯 Schulte Grid',
+    schulteTip: 'Tap the numbers in order 1 → N; faster means better focus',
+    sRestart: 'Restart', sMistakes: 'Mistakes {n}',
+    sBest: 'Best {size}×{size}: {value}',
+    sNoRecord: 'no record', sSeconds: '{value}s',
+    sAgain: 'Try again', sStartFocus: 'Start focusing 🍅', sClose: 'Close',
+    sAuto: 'Test before each focus session',
+    ratingExcellent: 'Excellent', ratingGood: 'Good', ratingFair: 'Fair', ratingPractice: 'Keep practicing',
+    schulteResult: 'Time <b>{secs}</b>s · {mistakes} mistakes',
+    newRecord: ' · New record! 🎉',
+    statsTitle: '📊 Focus Stats',
+    statsIOPlaceholder: 'Exported backup appears here; paste one here to import',
+    statsExport: '📤 Export backup', statsImport: '📥 Import backup',
+    statsHint: 'Data stays on this device — export regular backups',
+    statsToday: 'Today: <b>{minutes}</b> min · 🍅 × {count}',
+    statsTodayInterruptions: "Today's interruptions: 🧠 {inner} · 📞 {outer}",
+    statsWeek: 'Last 7 days: {minutes} min · 🍅 × {count}',
+    statsWeekInterruptions: 'Last 7 days: 🧠 {inner} · 📞 {outer}',
+    statsTotal: 'Total: {minutes} min (~{hours} h) · 🍅 × {count} · {days} active days · {streak}-day streak',
+    statsBarTitle: '{date} {wd}: {minutes} min',
+    copyOk: 'Copied to clipboard — you can also copy the text below',
+    copyFail: 'Copy failed — please select and copy manually',
+    badBackup: 'Not valid backup data',
+    missingHistory: 'Backup is missing the history field',
+    importOk: 'Import complete',
+    tasksTitle: "📋 Today's Tasks",
+    tasksTip: 'Estimate 1–7 pomodoros per task; completed focus sessions are credited automatically',
+    taskTitlePlaceholder: 'What needs to be done…',
+    taskEstTitle: 'Estimated pomodoros', taskAdd: 'Add',
+    tasksHint: 'A pomodoro is indivisible — if truly interrupted, press R to void it and start over',
+    taskEmpty: 'No tasks yet — add what you want to finish today',
+    taskPickTitle: 'Set as current task', taskDoneTitle: 'Done', taskUndoneTitle: 'Mark as not done',
+    taskMarkDone: 'Mark done', taskDeleteTitle: 'Delete task',
+    taskSummary: '{open} open · {spent} pomodoros spent · {left} more estimated',
+    allDone: "All of today's tasks are done 🎉",
+    tooManyEst: 'Split tasks that need more than 7 pomodoros',
+    taskDoneKeep: 'Task done 🎉 this session still counts toward it',
+    taskDoneAtEst: 'Task done 🎉 estimate reached',
+    taskDoneReview: 'Task done 🎉 use the remaining time to review',
+    deleteConfirm: 'Delete task "{title}"?',
+    interruptFocusOnly: 'You can log interruptions only during a focus session',
+    interruptInnerMsg: 'Distraction logged — gently bring your attention back 🧠',
+    interruptOuterMsg: 'Interruption logged — handle it during the break 📞',
+    closeSchulteFirst: 'Close the Schulte test first',
+    completeFocusTitle: 'Focus complete!',
+    completeFocusBody: '🍅 × {count} done — take a break ☕',
+    completeLongTitle: 'Long break over', completeLongBody: 'Ready for a new round? 🍅',
+    completeBreakTitle: 'Break over', completeBreakBody: 'Time to focus 🍅',
+    durationSaved: 'Saved — applies from the next {mode}',
+    taskEstReached: '"{title}" reached its estimate — is it done?',
+    headerStats: 'Today 🍅 × {count} · {minutes} min focused',
+    pageTitle: '{time} {mode} · Pomodoro',
+    modeFocus: 'Focus', modeShort: 'Short break', modeLong: 'Long break',
+  },
+}
+const WEEKDAYS = {
+  zh: ['日', '一', '二', '三', '四', '五', '六'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+}
+function defaultLang() {
+  const n = (navigator.language || 'zh').toLowerCase()
+  return n.startsWith('zh') ? 'zh' : 'en'
+}
+function t(key, vars) {
+  const dict = I18N[lang] || I18N.zh
+  let s = dict[key] != null ? dict[key] : (I18N.zh[key] != null ? I18N.zh[key] : key)
+  if (vars) for (const k in vars) s = s.split('{' + k + '}').join(String(vars[k]))
+  return s
 }
 
 const MODES = {
-  focus: { name: '专注', color: '#e5484d' },
-  short: { name: '短休息', color: '#2f9e6e' },
-  long:  { name: '长休息', color: '#4c6ef5' },
+  focus: { key: 'modeFocus', color: '#e5484d' },
+  short: { key: 'modeShort', color: '#2f9e6e' },
+  long:  { key: 'modeLong', color: '#4c6ef5' },
 }
 const QUOTES = {
-  focus: ['把手机放远一点，现在只做这一件事 🍅','先完成，再完美。','25 分钟后，你会感谢现在的自己。','深呼吸，专注当下这一分钟。','最好的开始时间，就是现在。'],
-  break: ['起来走走，喝口水 💧','看看远处，放松眼睛 👀','伸个懒腰，再战一轮 💪'],
+  zh: {
+    focus: ['把手机放远一点，现在只做这一件事 🍅','先完成，再完美。','25 分钟后，你会感谢现在的自己。','深呼吸，专注当下这一分钟。','最好的开始时间，就是现在。'],
+    break: ['起来走走，喝口水 💧','看看远处，放松眼睛 👀','伸个懒腰，再战一轮 💪'],
+  },
+  en: {
+    focus: ['Put your phone away — just this one thing now 🍅','Done is better than perfect.','Future you will thank present you in 25 minutes.','Breathe. Focus on this minute.','The best time to start is now.'],
+    break: ['Stand up, stretch, drink some water 💧','Look into the distance and relax your eyes 👀','Take a breath — then one more round 💪'],
+  },
 }
 const RING_R = 124
 const CIRC = 2 * Math.PI * RING_R
@@ -403,8 +590,23 @@ function load(key, fallback) {
 }
 function save(key, value) { try { localStorage.setItem(key, JSON.stringify(value)) } catch (e) {} }
 
-let settings = load('pomo.settings', { focus: 25, short: 5, long: 15, auto: true, sound: true, noise: false, schulte: true })
+let settings = load('pomo.settings', { focus: 25, short: 5, long: 15, auto: true, sound: true, noise: false, schulte: true, lang: defaultLang() })
 settings.noise = false // 白噪音只在本次打开期间有效
+let lang = settings.lang === 'en' ? 'en' : 'zh'
+settings.lang = lang
+let quoteState = { kind: 'ready', idx: 0 }
+function renderQuote() {
+  if (quoteState.kind === 'ready') { el.quote.textContent = t('quoteReady'); return }
+  if (quoteState.kind === 'inner') { el.quote.textContent = t('interruptInnerMsg'); return }
+  if (quoteState.kind === 'outer') { el.quote.textContent = t('interruptOuterMsg'); return }
+  const arr = QUOTES[lang][quoteState.kind] || QUOTES[lang].focus
+  el.quote.textContent = arr[quoteState.idx % arr.length]
+}
+function setQuote(kind) {
+  const arr = QUOTES[lang][kind]
+  quoteState = { kind: kind, idx: arr ? Math.floor(Math.random() * arr.length) : 0 }
+  renderQuote()
+}
 let mode = 'focus'
 let running = false
 let endTime = 0
@@ -565,14 +767,14 @@ function notice(title, body) {
 
 /* ---------- 托盘版桥接（Electron / WebView2） ---------- */
 function postState(left) {
-  const msg = { type: 'state', mode: mode, label: MODES[mode].name, running: running, remaining: left }
+  const msg = { type: 'state', mode: mode, label: t(MODES[mode].key), lang: lang, running: running, remaining: left }
   try {
     if (window.pomoBridge) { window.pomoBridge.post(msg); return }
     if (window.chrome && chrome.webview && chrome.webview.postMessage) chrome.webview.postMessage(msg)
   } catch (e) {}
 }
 function postDone(finished, count) {
-  const msg = { type: 'done', finished: finished, count: count }
+  const msg = { type: 'done', finished: finished, count: count, lang: lang }
   try {
     if (window.pomoBridge) { window.pomoBridge.post(msg); return }
     if (window.chrome && chrome.webview && chrome.webview.postMessage) chrome.webview.postMessage(msg)
@@ -618,8 +820,7 @@ function start(bypass) {
   try {
     if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()
   } catch (e) {}
-  const quotes = QUOTES[mode] || QUOTES.focus
-  el.quote.textContent = quotes[Math.floor(Math.random() * quotes.length)]
+  setQuote(mode === 'focus' ? 'focus' : 'break')
   endTime = Date.now() + remaining * 1000
   running = true
   timerId = setInterval(tick, 250)
@@ -676,35 +877,35 @@ function complete() {
     history[k] = rec
     today = rec
     saveHistory()
-    const t = tasksDoc.items.find(x => x.id === sessionTaskId)
-    if (t) {
-      t.pomos++
+    const task = tasksDoc.items.find(x => x.id === sessionTaskId)
+    if (task) {
+      task.pomos++
       saveTasks()
       renderTaskNow()
       if (!el.taskPanel.hidden) renderTaskList()
-      if (t.pomos === t.est && !t.done) toast('「' + t.title + '」已达到预估番茄数，完成了吗？')
+      if (task.pomos === task.est && !task.done) toast(t('taskEstReached', { title: task.title }))
     }
-    notice('专注完成！', '已完成 ' + today.count + ' 个番茄，休息一下吧 ☕')
+    notice(t('completeFocusTitle'), t('completeFocusBody', { count: today.count }))
   } else if (finished === 'long') {
     cyclePos = 0
-    notice('长休息结束', '开始新的一轮专注吧 🍅')
+    notice(t('completeLongTitle'), t('completeLongBody'))
   } else {
-    notice('休息结束', '开始专注吧 🍅')
+    notice(t('completeBreakTitle'), t('completeBreakBody'))
   }
   postDone(finished, today.count)
   switchTo(finished === 'focus' ? (cyclePos >= 4 ? 'long' : 'short') : 'focus')
   if (settings.auto) start()
 }
 function render() {
-  const t = sessionTotal
+  const totalSec = sessionTotal
   const left = running ? Math.max(0, Math.round((endTime - Date.now()) / 1000)) : remaining
   el.time.textContent = fmt(left)
-  el.phase.textContent = MODES[mode].name
-  const p = t > 0 ? Math.min(1, 1 - left / t) : 0
+  el.phase.textContent = t(MODES[mode].key)
+  const p = totalSec > 0 ? Math.min(1, 1 - left / totalSec) : 0
   el.ringFg.style.strokeDashoffset = CIRC * (1 - p)
   document.documentElement.style.setProperty('--accent', MODES[mode].color)
-  el.main.textContent = running ? '暂停' : (left < t ? '继续' : '开始')
-  el.stats.textContent = '今天 🍅 × ' + today.count + ' · 专注 ' + today.minutes + ' 分钟'
+  el.main.textContent = t(running ? 'pause' : (left < totalSec ? 'resume' : 'start'))
+  el.stats.textContent = t('headerStats', { count: today.count, minutes: today.minutes })
   Array.from(el.tabs.children).forEach(b => b.classList.toggle('active', b.dataset.mode === mode))
   el.dots.innerHTML = ''
   for (let i = 0; i < 4; i++) {
@@ -712,7 +913,7 @@ function render() {
     s.className = 'dot' + (i < cyclePos ? ' filled' : '')
     el.dots.appendChild(s)
   }
-  document.title = fmt(left) + ' ' + MODES[mode].name + ' · 番茄钟'
+  document.title = t('pageTitle', { time: fmt(left), mode: t(MODES[mode].key) })
   renderInterrupts()
   postState(left)
 }
@@ -721,31 +922,31 @@ function render() {
 function focusInProgress() { return mode === 'focus' && (running || remaining < sessionTotal) }
 function renderTaskNow() {
   el.taskNow.innerHTML = ''
-  const t = activeTask()
-  if (t) {
-    el.taskNow.append('当前任务：')
+  const task = activeTask()
+  if (task) {
+    el.taskNow.append(t('taskNowCurrent'))
     const b = document.createElement('b')
-    b.textContent = t.title
+    b.textContent = task.title
     el.taskNow.append(b)
     const meta = document.createElement('span')
-    meta.className = t.pomos > t.est ? 'over' : ''
-    meta.textContent = ' · 🍅 ' + t.pomos + '/' + t.est
+    meta.className = task.pomos > task.est ? 'over' : ''
+    meta.textContent = ' · 🍅 ' + task.pomos + '/' + task.est
     el.taskNow.append(meta)
     return
   }
   // 任务中途勾了完成，本轮专注仍归属它，直到本轮结束
   const st = sessionTaskId && focusInProgress() ? tasksDoc.items.find(x => x.id === sessionTaskId) : null
   if (st) {
-    el.taskNow.append('本轮计入：')
+    el.taskNow.append(t('taskNowSession'))
     const b = document.createElement('b')
     b.textContent = st.title
     el.taskNow.append(b)
     const meta = document.createElement('span')
-    meta.textContent = ' · 已完成'
+    meta.textContent = t('taskNowDone')
     el.taskNow.append(meta)
     return
   }
-  el.taskNow.textContent = '当前任务：未选择 · 点击打开今日待办'
+  el.taskNow.textContent = t('taskNowNone')
 }
 function renderTaskList() {
   el.taskList.innerHTML = ''
@@ -753,43 +954,43 @@ function renderTaskList() {
   if (!items.length) {
     const empty = document.createElement('div')
     empty.className = 'task-empty'
-    empty.textContent = '还没有任务，先写下今天要完成的事吧'
+    empty.textContent = t('taskEmpty')
     el.taskList.appendChild(empty)
   }
-  items.forEach(t => {
+  items.forEach(task => {
     const row = document.createElement('div')
-    row.className = 'task-item' + (t.done ? ' done' : '') + (t.id === activeTaskId && !t.done ? ' active' : '')
-    row.dataset.id = t.id
+    row.className = 'task-item' + (task.done ? ' done' : '') + (task.id === activeTaskId && !task.done ? ' active' : '')
+    row.dataset.id = task.id
     const pick = document.createElement('button')
     pick.className = 'task-pick'
     pick.dataset.act = 'pick'
-    pick.title = t.done ? '已完成' : '点击设为当前任务'
+    pick.title = task.done ? t('taskDoneTitle') : t('taskPickTitle')
     const title = document.createElement('span')
     title.className = 't-title'
-    title.textContent = t.title
+    title.textContent = task.title
     const meta = document.createElement('span')
-    meta.className = 't-meta' + (t.pomos > t.est ? ' over' : '')
-    meta.textContent = '🍅 ' + t.pomos + '/' + t.est
+    meta.className = 't-meta' + (task.pomos > task.est ? ' over' : '')
+    meta.textContent = '🍅 ' + task.pomos + '/' + task.est
     pick.append(title, meta)
     const doneBtn = document.createElement('button')
     doneBtn.className = 't-icon'
     doneBtn.dataset.act = 'done'
-    doneBtn.title = t.done ? '恢复未完成' : '标记完成'
-    doneBtn.textContent = t.done ? '↩' : '✓'
+    doneBtn.title = task.done ? t('taskUndoneTitle') : t('taskMarkDone')
+    doneBtn.textContent = task.done ? '↩' : '✓'
     const delBtn = document.createElement('button')
     delBtn.className = 't-icon'
     delBtn.dataset.act = 'del'
-    delBtn.title = '删除任务'
+    delBtn.title = t('taskDeleteTitle')
     delBtn.textContent = '✕'
     row.append(pick, doneBtn, delBtn)
     el.taskList.appendChild(row)
   })
-  const open = tasksDoc.items.filter(t => !t.done)
-  const est = open.reduce((a, t) => a + t.est, 0)
-  const spent = open.reduce((a, t) => a + t.pomos, 0)
+  const open = tasksDoc.items.filter(task => !task.done)
+  const est = open.reduce((a, task) => a + task.est, 0)
+  const spent = open.reduce((a, task) => a + task.pomos, 0)
   el.taskSummary.textContent = open.length
-    ? '未完成 ' + open.length + ' 项 · 已投入 ' + spent + ' 个番茄 · 预计还需 ' + Math.max(0, est - spent) + ' 个'
-    : (tasksDoc.items.length ? '今日任务已全部完成 🎉' : '')
+    ? t('taskSummary', { open: open.length, spent: spent, left: Math.max(0, est - spent) })
+    : (tasksDoc.items.length ? t('allDone') : '')
 }
 function assignActiveTask(id) {
   activeTaskId = id || ''
@@ -809,21 +1010,21 @@ function addTask() {
   if (!title) { el.taskTitle.focus(); return }
   let est = parseInt(el.taskEst.value, 10)
   if (isNaN(est) || est < 1) est = 1
-  if (est > 7) { est = 7; toast('超过 7 个番茄的任务，建议拆成小任务') }
-  const t = { id: newTaskId(), title: title, est: est, pomos: 0, done: false }
-  tasksDoc.items.push(t)
+  if (est > 7) { est = 7; toast(t('tooManyEst')) }
+  const task = { id: newTaskId(), title: title, est: est, pomos: 0, done: false }
+  tasksDoc.items.push(task)
   saveTasks()
-  if (!activeTask()) assignActiveTask(t.id)
+  if (!activeTask()) assignActiveTask(task.id)
   el.taskTitle.value = ''
   el.taskEst.value = 1
   renderTaskNow()
   renderTaskList()
   el.taskTitle.focus()
 }
-function taskSetDone(t, done) {
+function taskSetDone(task, done) {
   let keepSession = false
-  t.done = done
-  if (done && activeTaskId === t.id) {
+  task.done = done
+  if (done && activeTaskId === task.id) {
     keepSession = focusInProgress()
     activeTaskId = ''
     try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
@@ -833,18 +1034,18 @@ function taskSetDone(t, done) {
   renderTaskNow()
   renderTaskList()
   if (done) {
-    if (keepSession) toast('任务完成 🎉 本轮专注仍会计入它')
-    else toast(t.pomos >= t.est ? '任务完成 🎉 达到预估番茄数' : '任务完成 🎉 剩余时间用来检查回顾')
+    if (keepSession) toast(t('taskDoneKeep'))
+    else toast(t(task.pomos >= task.est ? 'taskDoneAtEst' : 'taskDoneReview'))
   }
 }
-function taskDelete(t) {
-  if (!confirm('删除任务「' + t.title + '」？')) return
-  tasksDoc.items = tasksDoc.items.filter(x => x.id !== t.id)
-  if (activeTaskId === t.id) {
+function taskDelete(task) {
+  if (!confirm(t('deleteConfirm', { title: task.title }))) return
+  tasksDoc.items = tasksDoc.items.filter(x => x.id !== task.id)
+  if (activeTaskId === task.id) {
     activeTaskId = ''
     try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
   }
-  if (sessionTaskId === t.id) sessionTaskId = ''
+  if (sessionTaskId === task.id) sessionTaskId = ''
   saveTasks()
   renderTaskNow()
   renderTaskList()
@@ -866,7 +1067,7 @@ function renderInterrupts() {
 function logInterrupt(kind) {
   ensureToday()
   if (!focusInProgress()) {
-    toast('专注进行中才能记录中断')
+    toast(t('interruptFocusOnly'))
     return
   }
   const key = todayKey()
@@ -882,16 +1083,14 @@ function logInterrupt(kind) {
   void btn.offsetWidth
   btn.classList.add('pulse')
   renderInterrupts()
-  el.quote.textContent = kind === 'inner'
-    ? '已记录一次走神，把注意力拉回来，继续 🧠'
-    : '已记录一次打扰，先记下来，休息时再处理 📞'
+  setQuote(kind)
   if (!el.statsPanel.hidden) renderStats()
 }
 
 /* ---------- 舒尔特方格 ---------- */
 const schulte = {
   open: false, pendingStart: false, size: 5,
-  next: 1, mistakes: 0, t0: 0, done: false,
+  next: 1, mistakes: 0, t0: 0, done: false, lastResult: null,
   best: load('pomo.schulte', { 4: 0, 5: 0, 6: 0 }),
 }
 let sTimerId = null
@@ -933,10 +1132,13 @@ function sNewGrid() {
     el.sGrid.appendChild(b)
   })
   el.sTimer.textContent = '0.0 s'
-  el.sMistakes.textContent = '错误 0'
+  el.sMistakes.textContent = t('sMistakes', { n: 0 })
+  schulte.lastResult = null
   el.sResult.hidden = true
   el.sAgain.hidden = true
   el.sGo.hidden = true
+  el.sAgain.textContent = t('sAgain')
+  el.sGo.textContent = t(schulte.pendingStart ? 'sStartFocus' : 'sClose')
   renderBest()
   Array.from(el.sSizes.children).forEach(x => x.classList.toggle('active', parseInt(x.dataset.size, 10) === schulte.size))
 }
@@ -946,28 +1148,42 @@ function sTick() {
 }
 function renderBest() {
   const b = schulte.best[schulte.size]
-  el.sBest.textContent = '最佳 ' + schulte.size + '×' + schulte.size + '：' + (b ? b.toFixed(1) + ' 秒' : '暂无记录')
+  const value = b ? t('sSeconds', { value: b.toFixed(1) }) : t('sNoRecord')
+  el.sBest.textContent = t('sBest', { size: schulte.size, value: value })
+}
+function renderSchulteResult() {
+  const r = schulte.lastResult
+  if (!r) { el.sResult.hidden = true; return }
+  el.sResult.hidden = false
+  el.sResult.innerHTML = t('schulteResult', { secs: r.secs.toFixed(1), mistakes: r.mistakes }) +
+    '<br><span class="rating ' + r.cls + '">' + t(r.ratingKey) + '</span>' +
+    (r.isBest ? t('newRecord') : '')
+}
+function renderSchulteText() {
+  el.sMistakes.textContent = t('sMistakes', { n: schulte.mistakes })
+  el.sAgain.textContent = t('sAgain')
+  el.sGo.textContent = t(schulte.pendingStart ? 'sStartFocus' : 'sClose')
+  renderBest()
+  renderSchulteResult()
 }
 function sFinish() {
   schulte.done = true
   const secs = (performance.now() - schulte.t0) / 1000
   const per = secs / (schulte.size * schulte.size)
-  let rating = '需要练习', cls = 'bad'
-  if (per <= 0.4) { rating = '优秀'; cls = 'great' }
-  else if (per <= 0.6) { rating = '良好'; cls = 'good' }
-  else if (per <= 0.8) { rating = '一般'; cls = 'ok' }
+  let ratingKey = 'ratingPractice', cls = 'bad'
+  if (per <= 0.4) { ratingKey = 'ratingExcellent'; cls = 'great' }
+  else if (per <= 0.6) { ratingKey = 'ratingGood'; cls = 'good' }
+  else if (per <= 0.8) { ratingKey = 'ratingFair'; cls = 'ok' }
   const prev = schulte.best[schulte.size]
   const isBest = !prev || secs < prev
   if (isBest) { schulte.best[schulte.size] = secs; save('pomo.schulte', schulte.best) }
-  el.sResult.hidden = false
-  el.sResult.innerHTML = '用时 <b>' + secs.toFixed(1) + '</b> 秒 · 错误 ' + schulte.mistakes + ' 次' +
-    '<br><span class="rating ' + cls + '">' + rating + '</span>' +
-    (isBest ? ' · 新纪录！🎉' : '')
+  schulte.lastResult = { secs: secs, mistakes: schulte.mistakes, ratingKey: ratingKey, cls: cls, isBest: isBest }
+  renderSchulteResult()
   renderBest()
   el.sAgain.hidden = false
-  el.sAgain.textContent = '再测一次'
+  el.sAgain.textContent = t('sAgain')
   el.sGo.hidden = false
-  el.sGo.textContent = schulte.pendingStart ? '开始专注 🍅' : '关闭'
+  el.sGo.textContent = t(schulte.pendingStart ? 'sStartFocus' : 'sClose')
 }
 el.sGrid.addEventListener('click', e => {
   const cell = e.target.closest('.s-cell')
@@ -980,7 +1196,7 @@ el.sGrid.addEventListener('click', e => {
     if (schulte.next > schulte.size * schulte.size) sFinish()
   } else {
     schulte.mistakes++
-    el.sMistakes.textContent = '错误 ' + schulte.mistakes
+    el.sMistakes.textContent = t('sMistakes', { n: schulte.mistakes })
     cell.classList.add('wrong')
     setTimeout(() => cell.classList.remove('wrong'), 300)
   }
@@ -1024,11 +1240,10 @@ function dayRec(d) { return history[d] || { count: 0, minutes: 0 } }
 function lastNDays(n) {
   const out = []
   const now = new Date()
-  const wd = ['日', '一', '二', '三', '四', '五', '六']
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
     const key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
-    out.push({ key, label: (d.getMonth() + 1) + '/' + d.getDate(), wd: wd[d.getDay()], ...dayRec(key) })
+    out.push({ key, label: (d.getMonth() + 1) + '/' + d.getDate(), wdIndex: d.getDay(), ...dayRec(key) })
   }
   return out
 }
@@ -1051,11 +1266,14 @@ function renderStats() {
   const weekOuter = days.reduce((a, d) => a + (d.outer || 0), 0)
   let totalMin = 0, totalCount = 0, daysActive = 0
   for (const k in history) { totalMin += history[k].minutes || 0; totalCount += history[k].count || 0; daysActive++ }
-  el.statsSummary.innerHTML = '今日：<b>' + today.minutes + '</b> 分钟 · ' + today.count + ' 个番茄<br>' +
-    '今日中断：🧠 ' + (today.inner || 0) + ' 次 · 📞 ' + (today.outer || 0) + ' 次<br>' +
-    '近 7 天：' + week + ' 分钟 · ' + weekCount + ' 个番茄<br>' +
-    '近 7 天中断：🧠 ' + weekInner + ' 次 · 📞 ' + weekOuter + ' 次'
-  el.statsTotal.textContent = '累计：' + totalMin + ' 分钟（约 ' + (totalMin / 60).toFixed(1) + ' 小时）· ' + totalCount + ' 个番茄 · ' + daysActive + ' 天有记录 · 连续 ' + streakDays() + ' 天'
+  el.statsSummary.innerHTML = t('statsToday', { minutes: '<b>' + today.minutes + '</b>', count: today.count }) + '<br>' +
+    t('statsTodayInterruptions', { inner: today.inner || 0, outer: today.outer || 0 }) + '<br>' +
+    t('statsWeek', { minutes: week, count: weekCount }) + '<br>' +
+    t('statsWeekInterruptions', { inner: weekInner, outer: weekOuter })
+  el.statsTotal.textContent = t('statsTotal', {
+    minutes: totalMin, hours: (totalMin / 60).toFixed(1), count: totalCount,
+    days: daysActive, streak: streakDays(),
+  })
   const max = Math.max(1, ...days.map(d => d.minutes))
   el.statsBars.innerHTML = ''
   days.forEach(d => {
@@ -1064,7 +1282,7 @@ function renderStats() {
     const bar = document.createElement('div')
     bar.className = 'stats-bar' + (d.minutes === 0 ? ' zero' : '')
     bar.style.height = (d.minutes === 0 ? 3 : Math.max(4, Math.round(d.minutes / max * 96))) + 'px'
-    bar.title = d.key + ' 周' + d.wd + '：' + d.minutes + ' 分钟'
+    bar.title = t('statsBarTitle', { date: d.key, wd: WEEKDAYS[lang][d.wdIndex], minutes: d.minutes })
     const val = document.createElement('div')
     val.className = 'stats-bar-val'
     val.textContent = d.minutes
@@ -1098,24 +1316,26 @@ function statsExport() {
       copied = document.execCommand('copy')
     }
   } catch (e) {}
-  toast(copied ? '已复制到剪贴板，也可手动复制下方内容' : '复制失败，请手动选择并复制')
+  toast(t(copied ? 'copyOk' : 'copyFail'))
 }
 function statsImport() {
   let data
-  try { data = JSON.parse(el.statsIO.value) } catch (e) { toast('内容不是有效的备份数据'); return }
-  if (!data || typeof data.history !== 'object') { toast('备份数据缺少 history 字段'); return }
+  try { data = JSON.parse(el.statsIO.value) } catch (e) { toast(t('badBackup')); return }
+  if (!data || typeof data.history !== 'object') { toast(t('missingHistory')); return }
   history = data.history
   saveHistory()
   if (data.settings && typeof data.settings === 'object') {
     settings = Object.assign(settings, data.settings)
     settings.noise = false
+    lang = settings.lang === 'en' ? 'en' : 'zh'
+    settings.lang = lang
     save('pomo.settings', settings)
   }
   if (data.schulteBest && typeof data.schulteBest === 'object') { schulte.best = data.schulteBest; save('pomo.schulte', schulte.best) }
   if (data.tasks && Array.isArray(data.tasks.items)) {
     tasksDoc = normalizeTasks(data.tasks)
     saveTasks()
-    activeTaskId = (typeof data.activeTask === 'string' && tasksDoc.items.some(t => t.id === data.activeTask && !t.done)) ? data.activeTask : ''
+    activeTaskId = (typeof data.activeTask === 'string' && tasksDoc.items.some(task => task.id === data.activeTask && !task.done)) ? data.activeTask : ''
     try {
       if (activeTaskId) localStorage.setItem('pomo.activeTask', activeTaskId)
       else localStorage.removeItem('pomo.activeTask')
@@ -1125,16 +1345,35 @@ function statsImport() {
   today = history[todayKey()] || { count: 0, minutes: 0 }
   el.dFocus.value = settings.focus; el.dShort.value = settings.short; el.dLong.value = settings.long
   if (!running && remaining >= sessionTotal) { sessionTotal = total(); remaining = sessionTotal }
+  applyLang()
+  toast(t('importOk'))
+}
+function setLang(next) {
+  lang = next === 'en' ? 'en' : 'zh'
+  settings.lang = lang
+  save('pomo.settings', settings)
+  applyLang()
+}
+function applyLang() {
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en'
+  document.querySelectorAll('[data-i18n]').forEach(n => { n.textContent = t(n.dataset.i18n) })
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(n => { n.placeholder = t(n.dataset.i18nPlaceholder) })
+  document.querySelectorAll('[data-i18n-title]').forEach(n => { n.title = t(n.dataset.i18nTitle) })
+  el.langBtn.textContent = lang === 'zh' ? 'EN' : '中文'
+  el.langBtn.title = t('langToggleTitle')
+  renderQuote()
   render()
   renderTaskNow()
   renderTaskList()
   renderStats()
-  toast('导入成功')
+  renderSchulteText()
 }
+
 el.chipStats.addEventListener('click', statsOpen)
 el.statsClose.addEventListener('click', statsClose)
 el.statsExport.addEventListener('click', statsExport)
 el.statsImport.addEventListener('click', statsImport)
+el.langBtn.addEventListener('click', () => setLang(lang === 'zh' ? 'en' : 'zh'))
 
 /* ---------- 今日待办事件 ---------- */
 el.chipTasks.addEventListener('click', tasksOpen)
@@ -1147,18 +1386,18 @@ el.taskList.addEventListener('click', e => {
   if (!btn) return
   const row = btn.closest('.task-item')
   if (!row) return
-  const t = tasksDoc.items.find(x => x.id === row.dataset.id)
-  if (!t) return
+  const task = tasksDoc.items.find(x => x.id === row.dataset.id)
+  if (!task) return
   if (btn.dataset.act === 'pick') {
-    if (!t.done) setActiveTask(t.id)
+    if (!task.done) setActiveTask(task.id)
   } else if (btn.dataset.act === 'done') {
-    taskSetDone(t, !t.done)
+    taskSetDone(task, !task.done)
   } else if (btn.dataset.act === 'del') {
-    taskDelete(t)
+    taskDelete(task)
   }
 })
 el.taskNow.addEventListener('click', () => {
-  if (schulte.open) { toast('先关闭舒尔特测试'); return }
+  if (schulte.open) { toast(t('closeSchulteFirst')); return }
   if (!el.statsPanel.hidden) statsClose()
   tasksOpen()
 })
@@ -1218,7 +1457,7 @@ function bindDur(input, key) {
     }
     // 已经开始（运行中或暂停中）：本轮保持原时长，设置从下一轮生效，
     // 否则会出现倒计时、进度环、统计各自按不同时长计算的错乱
-    toast('时长已保存，将从下一轮「' + MODES[key].name + '」开始生效')
+    toast(t('durationSaved', { mode: t(MODES[key].key) }))
   })
 }
 bindDur(el.dFocus, 'focus')
@@ -1249,9 +1488,7 @@ document.addEventListener('keydown', e => {
 })
 document.addEventListener('visibilitychange', () => { if (!document.hidden && running) tick() })
 
-render()
-renderTaskNow()
-renderTaskList()
+applyLang()
 </script>
 </body>
 </html>

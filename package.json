@@ -1,15 +1,20 @@
 {
   "name": "pomodoro-tray",
   "version": "1.0.0",
-  "description": "番茄钟：番茄工作法桌面应用（Electron 托盘版 + 纯网页版）",
+  "description": "Bilingual Pomodoro tray app (中文/English) with task estimates, interruption tracking and Schulte grid",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
   },
   "keywords": [
     "pomodoro",
+    "pomodoro-technique",
     "timer",
     "electron",
+    "bilingual",
+    "i18n",
+    "task-management",
+    "focus",
     "schulte-grid",
     "productivity",
     "番茄钟"
