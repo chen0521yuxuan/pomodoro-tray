@@ -210,6 +210,7 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
 .stats-total{font-size:12px;color:var(--muted);line-height:1.7}
 .stats-io{width:100%;height:76px;padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:12px;font-family:ui-monospace,Consolas,monospace;resize:none}
 .stats-hint{font-size:11px;color:var(--muted);text-align:center}
+.task-date{font-size:12px;color:var(--muted);text-align:center;margin-top:-6px}
 .task-add{display:flex;gap:8px;align-items:center}
 .task-add input{
   padding:9px 11px;border-radius:10px;border:1px solid var(--line);
@@ -356,6 +357,7 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
       <button class="s-close" id="taskClose" title="关闭 (Esc)" data-i18n-title="closeEsc">✕</button>
     </div>
     <p class="s-tip" data-i18n="tasksTip">每个任务预估 1~7 个番茄；完成的专注会自动记在当前任务上</p>
+    <div class="task-date" id="taskDate"></div>
     <div class="task-add">
       <input id="taskTitle" maxlength="40" placeholder="要完成的任务…" data-i18n-placeholder="taskTitlePlaceholder">
       <input id="taskEst" type="number" min="1" max="7" value="1" title="预计番茄数" data-i18n-title="taskEstTitle">
@@ -387,6 +389,7 @@ const el = {
   statsExport: $('statsExport'), statsImport: $('statsImport'),
   taskPanel: $('taskPanel'), taskClose: $('taskClose'), taskTitle: $('taskTitle'),
   taskEst: $('taskEst'), taskAdd: $('taskAdd'), taskList: $('taskList'), taskSummary: $('taskSummary'),
+  taskDate: $('taskDate'),
   langBtn: $('langBtn'),
 }
 
@@ -440,6 +443,8 @@ const I18N = {
     missingHistory: '备份数据缺少 history 字段',
     importOk: '导入成功',
     tasksTitle: '📋 今日待办',
+    tasksDate: '今天 · {date}',
+    newDayToast: '新的一天：未完成任务已顺延，已完成任务已归档',
     tasksTip: '每个任务预估 1~7 个番茄；完成的专注会自动记在当前任务上',
     taskTitlePlaceholder: '要完成的任务…',
     taskEstTitle: '预计番茄数', taskAdd: '添加',
@@ -516,6 +521,8 @@ const I18N = {
     missingHistory: 'Backup is missing the history field',
     importOk: 'Import complete',
     tasksTitle: "📋 Today's Tasks",
+    tasksDate: 'Today · {date}',
+    newDayToast: 'New day: unfinished tasks carried over, completed tasks archived',
     tasksTip: 'Estimate 1–7 pomodoros per task; completed focus sessions are credited automatically',
     taskTitlePlaceholder: 'What needs to be done…',
     taskEstTitle: 'Estimated pomodoros', taskAdd: 'Add',
@@ -618,6 +625,12 @@ let sessionInner = 0 // 本轮专注内记录的内部中断数
 let sessionOuter = 0 // 本轮专注内记录的外部中断数
 
 function todayKey() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() }
+function formatToday() {
+  const d = new Date()
+  return d.toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
+    year: 'numeric', month: lang === 'zh' ? 'long' : 'short', day: 'numeric',
+  })
+}
 // 每日专注记录：history['YYYY-M-D'] = { count: 番茄数, minutes: 专注分钟 }
 let history = load('pomo.history', {})
 // 兼容旧版 pomo.today 单日数据，自动迁移进 history
@@ -663,22 +676,35 @@ if (activeTaskId && !activeTask()) {
 }
 let sessionTaskId = activeTaskId // 本轮专注归属的任务；中途勾完成也不改变本轮归属
 let todayStamp = todayKey()
+let dayTimer = null
 function ensureToday() {
   const k = todayKey()
   if (k === todayStamp) return
   todayStamp = k
   today = history[k] || { count: 0, minutes: 0 }
   // 新的一天：未完成任务顺延，已完成的归档
-  tasksDoc = { date: k, items: tasksDoc.items.filter(t => !t.done) }
+  tasksDoc = { date: k, items: tasksDoc.items.filter(task => !task.done) }
   saveTasks()
   if (activeTaskId && !activeTask()) {
     activeTaskId = ''
     try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
   }
-  if (sessionTaskId && !tasksDoc.items.some(t => t.id === sessionTaskId)) sessionTaskId = ''
+  if (sessionTaskId && !tasksDoc.items.some(task => task.id === sessionTaskId)) sessionTaskId = ''
   renderTaskNow()
   renderTaskList()
+  if (!el.statsPanel.hidden) renderStats()
   render()
+  scheduleDayRollover()
+  toast(t('newDayToast'))
+}
+function scheduleDayRollover() {
+  if (dayTimer) clearTimeout(dayTimer)
+  const now = new Date()
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2)
+  dayTimer = setTimeout(() => {
+    ensureToday()
+    scheduleDayRollover()
+  }, Math.max(1000, next.getTime() - now.getTime()))
 }
 
 /* ---------- 音频 ---------- */
@@ -949,6 +975,7 @@ function renderTaskNow() {
   el.taskNow.textContent = t('taskNowNone')
 }
 function renderTaskList() {
+  el.taskDate.textContent = t('tasksDate', { date: formatToday() })
   el.taskList.innerHTML = ''
   const items = tasksDoc.items.slice().sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0))
   if (!items.length) {
@@ -1266,7 +1293,7 @@ function renderStats() {
   const weekOuter = days.reduce((a, d) => a + (d.outer || 0), 0)
   let totalMin = 0, totalCount = 0, daysActive = 0
   for (const k in history) { totalMin += history[k].minutes || 0; totalCount += history[k].count || 0; daysActive++ }
-  el.statsSummary.innerHTML = t('statsToday', { minutes: '<b>' + today.minutes + '</b>', count: today.count }) + '<br>' +
+  el.statsSummary.innerHTML = t('statsToday', { minutes: today.minutes, count: today.count }) + '<br>' +
     t('statsTodayInterruptions', { inner: today.inner || 0, outer: today.outer || 0 }) + '<br>' +
     t('statsWeek', { minutes: week, count: weekCount }) + '<br>' +
     t('statsWeekInterruptions', { inner: weekInner, outer: weekOuter })
@@ -1486,7 +1513,15 @@ document.addEventListener('keydown', e => {
     else document.documentElement.requestFullscreen()
   }
 })
-document.addEventListener('visibilitychange', () => { if (!document.hidden && running) tick() })
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    ensureToday()
+    if (running) tick()
+  }
+})
+window.addEventListener('focus', ensureToday)
+setInterval(ensureToday, 60000)
+scheduleDayRollover()
 
 applyLang()
 </script>

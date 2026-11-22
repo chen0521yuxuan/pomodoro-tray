@@ -35,7 +35,7 @@ Switch the entire UI — including the tray menu and notifications — between *
 
 - 🍅 **Pomodoro cycle** — focus / short break / long break, custom durations, auto-start, long break after every 4 pomodoros.
 - 🌐 **Bilingual by design** — one-click 中文/EN switch; the choice is saved and applies to the window, tray menu, tooltips and system notifications.
-- 📋 **Today's tasks** — estimate 1–7 pomodoros per task, pick the current task, and let completed focus sessions count toward it automatically. Unfinished tasks carry over to the next day; tasks marked done mid-session still receive the in-progress pomodoro.
+- 📋 **Today's tasks** — estimate 1–7 pomodoros per task, pick the current task, and let completed focus sessions count toward it automatically. The list refreshes automatically at midnight even while the app is idle; unfinished tasks carry over and completed ones are archived. Tasks marked done mid-session still receive the in-progress pomodoro.
 - 🧠 **Interruption tracking** — log internal distractions and external interruptions without pausing the timer; daily and 7-day counts appear in stats.
 - 📊 **Focus stats** — daily minutes/pomodoros, 7-day chart, active-day streak, totals, and interruption counts; export/import a JSON backup (tasks included).
 - 🎯 **Schulte grid** — 4×4 / 5×5 / 6×6 attention exercise with mistake counting and per-size best times.
@@ -138,7 +138,7 @@ Issues and pull requests are welcome. If this project saves you some focus time,
 
 - 🍅 **完整番茄循环**：专注 / 短休息 / 长休息，时长可自定义并自动保存；每 4 个番茄进入长休息，可自动开始下一阶段。
 - 🌐 **真正的中英双语**：一键切换；语言会记住，窗口、托盘菜单、托盘提示和系统通知同步切换。
-- 📋 **今日待办**：给每项任务预估 1~7 个番茄，选择当前任务，完成的专注自动记到任务上；未完成任务跨天顺延，中途勾完成也会收到本轮番茄。
+- 📋 **今日待办**：给每项任务预估 1~7 个番茄，选择当前任务，完成的专注自动记到任务上；**跨天自动刷新（应用空闲时也生效）**，已完成归档、未完成顺延，中途勾完成也会收到本轮番茄。
 - 🧠 **中断记录**：专注中一键记录「走神」和「被打扰」，番茄不暂停；今日和近 7 天的中断次数进入统计。
 - 📊 **专注统计**：每日分钟数/番茄数、近 7 天柱状图、连续天数、累计数据与中断次数；支持 JSON 备份导出/导入（含今日待办）。
 - 🎯 **舒尔特方格**：4×4 / 5×5 / 6×6 专注力训练，点错计数，自动记录每种规格的最佳成绩。
