@@ -1,6 +1,6 @@
 {
   "name": "pomodoro-tray",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Bilingual Pomodoro tray app (中文/English) with task estimates, interruption tracking and Schulte grid",
   "main": "main.js",
   "scripts": {

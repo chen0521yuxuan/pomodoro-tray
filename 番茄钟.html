@@ -624,11 +624,18 @@ let cyclePos = 0 // 本循环内已完成的专注数 0-4
 let sessionInner = 0 // 本轮专注内记录的内部中断数
 let sessionOuter = 0 // 本轮专注内记录的外部中断数
 
-function todayKey() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() }
+const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000 // 固定按北京时间（UTC+8）划分自然日
+function beijingParts() {
+  const d = new Date(Date.now() + BEIJING_OFFSET_MS)
+  return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate(), wd: d.getUTCDay() }
+}
+function keyFromBeijing(p) { return p.y + '-' + (p.m + 1) + '-' + p.d }
+function todayKey() { return keyFromBeijing(beijingParts()) }
 function formatToday() {
-  const d = new Date()
+  const p = beijingParts()
+  const d = new Date(Date.UTC(p.y, p.m, p.d))
   return d.toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
-    year: 'numeric', month: lang === 'zh' ? 'long' : 'short', day: 'numeric',
+    timeZone: 'UTC', year: 'numeric', month: lang === 'zh' ? 'long' : 'short', day: 'numeric',
   })
 }
 // 每日专注记录：history['YYYY-M-D'] = { count: 番茄数, minutes: 专注分钟 }
@@ -699,12 +706,14 @@ function ensureToday() {
 }
 function scheduleDayRollover() {
   if (dayTimer) clearTimeout(dayTimer)
-  const now = new Date()
-  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2)
+  const now = Date.now()
+  const p = beijingParts()
+  // 北京时间次日 00:00:02（固定 UTC+8，不受系统时区影响）
+  const next = Date.UTC(p.y, p.m, p.d + 1, 0, 0, 2) - BEIJING_OFFSET_MS
   dayTimer = setTimeout(() => {
     ensureToday()
     scheduleDayRollover()
-  }, Math.max(1000, next.getTime() - now.getTime()))
+  }, Math.max(1000, next - now))
 }
 
 /* ---------- 音频 ---------- */
@@ -1266,20 +1275,20 @@ function toast(msg) {
 function dayRec(d) { return history[d] || { count: 0, minutes: 0 } }
 function lastNDays(n) {
   const out = []
-  const now = new Date()
+  const p = beijingParts()
   for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
-    const key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
-    out.push({ key, label: (d.getMonth() + 1) + '/' + d.getDate(), wdIndex: d.getDay(), ...dayRec(key) })
+    const d = new Date(Date.UTC(p.y, p.m, p.d - i))
+    const key = d.getUTCFullYear() + '-' + (d.getUTCMonth() + 1) + '-' + d.getUTCDate()
+    out.push({ key, label: (d.getUTCMonth() + 1) + '/' + d.getUTCDate(), wdIndex: d.getUTCDay(), ...dayRec(key) })
   }
   return out
 }
 function streakDays() {
   let s = 0
-  const now = new Date()
+  const p = beijingParts()
   for (let i = 0; i < 365; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
-    const key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
+    const d = new Date(Date.UTC(p.y, p.m, p.d - i))
+    const key = d.getUTCFullYear() + '-' + (d.getUTCMonth() + 1) + '-' + d.getUTCDate()
     if (dayRec(key).count > 0) s++
     else if (i > 0) break
   }
