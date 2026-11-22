@@ -210,7 +210,16 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
 .stats-total{font-size:12px;color:var(--muted);line-height:1.7}
 .stats-io{width:100%;height:76px;padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:12px;font-family:ui-monospace,Consolas,monospace;resize:none}
 .stats-hint{font-size:11px;color:var(--muted);text-align:center}
-.task-date{font-size:12px;color:var(--muted);text-align:center;margin-top:-6px}
+.task-meta-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:-4px}
+.task-date{font-size:12px;color:var(--muted);text-align:left}
+.task-clear{
+  flex:none;padding:4px 9px;border-radius:999px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);font-size:12px;cursor:pointer;
+  transition:border-color .2s,color .2s,opacity .2s;
+}
+.task-clear:hover{border-color:var(--accent);color:var(--accent)}
+.task-clear:disabled{opacity:.4;cursor:default}
+.task-clear:disabled:hover{border-color:var(--line);color:var(--muted)}
 .task-add{display:flex;gap:8px;align-items:center}
 .task-add input{
   padding:9px 11px;border-radius:10px;border:1px solid var(--line);
@@ -357,7 +366,10 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
       <button class="s-close" id="taskClose" title="关闭 (Esc)" data-i18n-title="closeEsc">✕</button>
     </div>
     <p class="s-tip" data-i18n="tasksTip">每个任务预估 1~7 个番茄；完成的专注会自动记在当前任务上</p>
-    <div class="task-date" id="taskDate"></div>
+    <div class="task-meta-row">
+      <div class="task-date" id="taskDate"></div>
+      <button id="taskClear" class="task-clear" data-i18n="taskClear" data-i18n-title="taskClearTitle" title="清空今日全部任务，重新开始">🧹 清空任务</button>
+    </div>
     <div class="task-add">
       <input id="taskTitle" maxlength="40" placeholder="要完成的任务…" data-i18n-placeholder="taskTitlePlaceholder">
       <input id="taskEst" type="number" min="1" max="7" value="1" title="预计番茄数" data-i18n-title="taskEstTitle">
@@ -389,7 +401,7 @@ const el = {
   statsExport: $('statsExport'), statsImport: $('statsImport'),
   taskPanel: $('taskPanel'), taskClose: $('taskClose'), taskTitle: $('taskTitle'),
   taskEst: $('taskEst'), taskAdd: $('taskAdd'), taskList: $('taskList'), taskSummary: $('taskSummary'),
-  taskDate: $('taskDate'),
+  taskDate: $('taskDate'), taskClear: $('taskClear'),
   langBtn: $('langBtn'),
 }
 
@@ -445,6 +457,11 @@ const I18N = {
     tasksTitle: '📋 今日待办',
     tasksDate: '今天 · {date}',
     newDayToast: '新的一天：未完成任务已顺延，已完成任务已归档',
+    taskClear: '🧹 清空任务',
+    taskClearTitle: '清空今日全部任务，重新开始',
+    clearConfirm: '清空今日全部任务（{n} 项）？番茄统计不会受影响。',
+    clearConfirmRunning: '清空今日全部任务（{n} 项）？当前这轮专注将不再记到任务上。',
+    clearedToast: '已清空今日任务',
     tasksTip: '每个任务预估 1~7 个番茄；完成的专注会自动记在当前任务上',
     taskTitlePlaceholder: '要完成的任务…',
     taskEstTitle: '预计番茄数', taskAdd: '添加',
@@ -523,6 +540,11 @@ const I18N = {
     tasksTitle: "📋 Today's Tasks",
     tasksDate: 'Today · {date}',
     newDayToast: 'New day: unfinished tasks carried over, completed tasks archived',
+    taskClear: '🧹 Clear list',
+    taskClearTitle: 'Clear all tasks for today and start fresh',
+    clearConfirm: 'Clear all {n} tasks for today? Focus stats are not affected.',
+    clearConfirmRunning: 'Clear all {n} tasks? The current focus session will no longer be credited to a task.',
+    clearedToast: "Today's task list cleared",
     tasksTip: 'Estimate 1–7 pomodoros per task; completed focus sessions are credited automatically',
     taskTitlePlaceholder: 'What needs to be done…',
     taskEstTitle: 'Estimated pomodoros', taskAdd: 'Add',
@@ -624,18 +646,11 @@ let cyclePos = 0 // 本循环内已完成的专注数 0-4
 let sessionInner = 0 // 本轮专注内记录的内部中断数
 let sessionOuter = 0 // 本轮专注内记录的外部中断数
 
-const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000 // 固定按北京时间（UTC+8）划分自然日
-function beijingParts() {
-  const d = new Date(Date.now() + BEIJING_OFFSET_MS)
-  return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate(), wd: d.getUTCDay() }
-}
-function keyFromBeijing(p) { return p.y + '-' + (p.m + 1) + '-' + p.d }
-function todayKey() { return keyFromBeijing(beijingParts()) }
+function todayKey() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() }
 function formatToday() {
-  const p = beijingParts()
-  const d = new Date(Date.UTC(p.y, p.m, p.d))
+  const d = new Date()
   return d.toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
-    timeZone: 'UTC', year: 'numeric', month: lang === 'zh' ? 'long' : 'short', day: 'numeric',
+    year: 'numeric', month: lang === 'zh' ? 'long' : 'short', day: 'numeric',
   })
 }
 // 每日专注记录：history['YYYY-M-D'] = { count: 番茄数, minutes: 专注分钟 }
@@ -706,14 +721,12 @@ function ensureToday() {
 }
 function scheduleDayRollover() {
   if (dayTimer) clearTimeout(dayTimer)
-  const now = Date.now()
-  const p = beijingParts()
-  // 北京时间次日 00:00:02（固定 UTC+8，不受系统时区影响）
-  const next = Date.UTC(p.y, p.m, p.d + 1, 0, 0, 2) - BEIJING_OFFSET_MS
+  const now = new Date()
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2)
   dayTimer = setTimeout(() => {
     ensureToday()
     scheduleDayRollover()
-  }, Math.max(1000, next - now))
+  }, Math.max(1000, next.getTime() - now.getTime()))
 }
 
 /* ---------- 音频 ---------- */
@@ -985,6 +998,7 @@ function renderTaskNow() {
 }
 function renderTaskList() {
   el.taskDate.textContent = t('tasksDate', { date: formatToday() })
+  el.taskClear.disabled = tasksDoc.items.length === 0
   el.taskList.innerHTML = ''
   const items = tasksDoc.items.slice().sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0))
   if (!items.length) {
@@ -1085,6 +1099,21 @@ function taskDelete(task) {
   saveTasks()
   renderTaskNow()
   renderTaskList()
+}
+function clearTodayTasks() {
+  ensureToday()
+  const n = tasksDoc.items.length
+  if (!n) return
+  const key = focusInProgress() ? 'clearConfirmRunning' : 'clearConfirm'
+  if (!confirm(t(key, { n: n }))) return
+  tasksDoc.items = []
+  activeTaskId = ''
+  sessionTaskId = ''
+  try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
+  saveTasks()
+  renderTaskNow()
+  renderTaskList()
+  toast(t('clearedToast'))
 }
 function tasksOpen() {
   ensureToday()
@@ -1275,20 +1304,20 @@ function toast(msg) {
 function dayRec(d) { return history[d] || { count: 0, minutes: 0 } }
 function lastNDays(n) {
   const out = []
-  const p = beijingParts()
+  const now = new Date()
   for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(Date.UTC(p.y, p.m, p.d - i))
-    const key = d.getUTCFullYear() + '-' + (d.getUTCMonth() + 1) + '-' + d.getUTCDate()
-    out.push({ key, label: (d.getUTCMonth() + 1) + '/' + d.getUTCDate(), wdIndex: d.getUTCDay(), ...dayRec(key) })
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+    const key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
+    out.push({ key, label: (d.getMonth() + 1) + '/' + d.getDate(), wdIndex: d.getDay(), ...dayRec(key) })
   }
   return out
 }
 function streakDays() {
   let s = 0
-  const p = beijingParts()
+  const now = new Date()
   for (let i = 0; i < 365; i++) {
-    const d = new Date(Date.UTC(p.y, p.m, p.d - i))
-    const key = d.getUTCFullYear() + '-' + (d.getUTCMonth() + 1) + '-' + d.getUTCDate()
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+    const key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
     if (dayRec(key).count > 0) s++
     else if (i > 0) break
   }
@@ -1432,6 +1461,7 @@ el.taskList.addEventListener('click', e => {
     taskDelete(task)
   }
 })
+el.taskClear.addEventListener('click', clearTodayTasks)
 el.taskNow.addEventListener('click', () => {
   if (schulte.open) { toast(t('closeSchulteFirst')); return }
   if (!el.statsPanel.hidden) statsClose()
