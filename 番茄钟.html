@@ -310,9 +310,9 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
     <button id="chipStats" class="chip" title="专注统计与数据备份" data-i18n="statsChip" data-i18n-title="statsChipTitle">📊 统计</button>
   </div>
   <div class="durations">
-    <label><span data-i18n="durationFocus">专注</span> <input type="number" id="dFocus" min="1" max="180"> <span data-i18n="minutesShort">分</span></label>
-    <label><span data-i18n="durationShort">短休</span> <input type="number" id="dShort" min="1" max="60"> <span data-i18n="minutesShort">分</span></label>
-    <label><span data-i18n="durationLong">长休</span> <input type="number" id="dLong" min="1" max="60"> <span data-i18n="minutesShort">分</span></label>
+    <label><span data-i18n="durationFocus">专注</span> <input type="text" inputmode="numeric" maxlength="3" pattern="[0-9]*" id="dFocus"> <span data-i18n="minutesShort">分</span></label>
+    <label><span data-i18n="durationShort">短休</span> <input type="text" inputmode="numeric" maxlength="3" pattern="[0-9]*" id="dShort"> <span data-i18n="minutesShort">分</span></label>
+    <label><span data-i18n="durationLong">长休</span> <input type="text" inputmode="numeric" maxlength="3" pattern="[0-9]*" id="dLong"> <span data-i18n="minutesShort">分</span></label>
   </div>
   <footer data-i18n="footerHint">空格 开始/暂停 · R 重置 · S 跳过 · F 全屏</footer>
 </div>
@@ -381,7 +381,7 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
     </div>
     <div class="task-add">
       <input id="taskTitle" maxlength="40" placeholder="要完成的任务…" data-i18n-placeholder="taskTitlePlaceholder">
-      <input id="taskEst" type="number" min="1" max="7" value="1" title="预计番茄数" data-i18n-title="taskEstTitle">
+      <input id="taskEst" type="text" inputmode="numeric" maxlength="2" pattern="[0-9]*" value="1" title="预计番茄数" data-i18n-title="taskEstTitle">
       <button id="taskAdd" class="primary" data-i18n="taskAdd">添加</button>
     </div>
     <div class="task-list" id="taskList"></div>
@@ -863,6 +863,14 @@ function fmt(s) {
   const m = Math.floor(s / 60), r = s % 60
   return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0')
 }
+function cleanDigits(input, maxLen) {
+  // 数字输入保持普通文本框，避免 Windows 输入法被 number 控件切到英文
+  const v = input.value
+    .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .replace(/[^0-9]/g, '')
+    .slice(0, maxLen)
+  if (v !== input.value) input.value = v
+}
 function switchTo(m) {
   mode = m
   sessionTotal = total()
@@ -1034,10 +1042,11 @@ function renderTaskList() {
       titleInput.value = task.title
       const estInput = document.createElement('input')
       estInput.className = 'task-edit-est'
-      estInput.type = 'number'
-      estInput.min = '1'
-      estInput.max = '7'
+      estInput.type = 'text'
+      estInput.inputMode = 'numeric'
+      estInput.maxLength = 2
       estInput.value = task.est
+      estInput.addEventListener('input', e => { if (!e.isComposing) cleanDigits(estInput, 2) })
       const saveBtn = document.createElement('button')
       saveBtn.className = 't-icon'
       saveBtn.dataset.act = 'save'
@@ -1107,6 +1116,7 @@ function addTask() {
   ensureToday()
   const title = el.taskTitle.value.trim().slice(0, 40)
   if (!title) { el.taskTitle.focus(); return }
+  cleanDigits(el.taskEst, 2)
   let est = parseInt(el.taskEst.value, 10)
   if (isNaN(est) || est < 1) est = 1
   if (est > 7) { est = 7; toast(t('tooManyEst')) }
@@ -1164,7 +1174,9 @@ function saveTaskEdit() {
   const titleInput = row.querySelector('.task-edit-title')
   const title = titleInput.value.trim().slice(0, 40)
   if (!title) { titleInput.focus(); return }
-  let est = parseInt(row.querySelector('.task-edit-est').value, 10)
+  const estInput = row.querySelector('.task-edit-est')
+  cleanDigits(estInput, 2)
+  let est = parseInt(estInput.value, 10)
   if (isNaN(est) || est < 1) est = 1
   if (est > 7) est = 7
   task.title = title
@@ -1608,6 +1620,7 @@ document.addEventListener('fullscreenchange', () => {
 function bindDur(input, key) {
   input.value = settings[key]
   input.addEventListener('change', () => {
+    cleanDigits(input, 3)
     let v = parseInt(input.value, 10)
     if (isNaN(v) || v < 1) v = 1
     const max = key === 'focus' ? 180 : 60
@@ -1631,6 +1644,9 @@ function bindDur(input, key) {
 bindDur(el.dFocus, 'focus')
 bindDur(el.dShort, 'short')
 bindDur(el.dLong, 'long')
+;[el.dFocus, el.dShort, el.dLong, el.taskEst].forEach(input => {
+  input.addEventListener('input', e => { if (!e.isComposing) cleanDigits(input, input === el.taskEst ? 2 : 3) })
+})
 try { el.goal.value = localStorage.getItem('pomo.goal') || '' } catch (e) {}
 el.goal.addEventListener('input', () => {
   try { localStorage.setItem('pomo.goal', el.goal.value) } catch (e) {}
