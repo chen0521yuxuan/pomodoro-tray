@@ -35,12 +35,12 @@ Switch the entire UI — including the tray menu and notifications — between *
 
 - 🍅 **Pomodoro cycle** — focus / short break / long break, custom durations, auto-start, long break after every 4 pomodoros.
 - 🌐 **Bilingual by design** — one-click 中文/EN switch; the choice is saved and applies to the window, tray menu, tooltips and system notifications.
-- 📋 **Today's tasks** — estimate 1–7 pomodoros per task, pick the current task, and let completed focus sessions count toward it automatically. The list refreshes automatically at **midnight in your system time zone**, even while the app is idle; unfinished tasks carry over and completed ones are archived. A **Clear list** button lets you force a fresh start at any time. Tasks marked done mid-session still receive the in-progress pomodoro.
+- 📋 **Today's tasks** — estimate 1–7 pomodoros per task, pick the current task, and let completed focus sessions count toward it automatically. Every task can be **edited in place** (title + estimate). The list refreshes automatically at **midnight in your system time zone**, even while the app is idle; unfinished tasks carry over and completed ones are archived. A **Clear list** button lets you force a fresh start at any time. Tasks marked done mid-session still receive the in-progress pomodoro.
 - 🧠 **Interruption tracking** — log internal distractions and external interruptions without pausing the timer; daily and 7-day counts appear in stats.
 - 📊 **Focus stats** — daily minutes/pomodoros, 7-day chart, active-day streak, totals, and interruption counts; export/import a JSON backup (tasks included).
 - 🎯 **Schulte grid** — 4×4 / 5×5 / 6×6 attention exercise with mistake counting and per-size best times.
 - 🌊 **White noise** — synthesized pink noise, no audio files needed.
-- 🔔 **Chime & notifications** — Web Audio bell plus native notifications while the window is hidden.
+- 🔔 **Chime & notifications** — Web Audio bell plus exactly one native notification when the window is not in the foreground; closing to the tray is silent.
 - 🖥 **Tray-first** — closing the window keeps the timer running; the tray tooltip shows the remaining time and the context menu controls the session.
 - 🌙 **Dark mode**, fullscreen mode, and a daily goal line.
 - 🔒 **Local-only data** — no sign-in, no cloud, no tracking.
@@ -138,12 +138,12 @@ Issues and pull requests are welcome. If this project saves you some focus time,
 
 - 🍅 **完整番茄循环**：专注 / 短休息 / 长休息，时长可自定义并自动保存；每 4 个番茄进入长休息，可自动开始下一阶段。
 - 🌐 **真正的中英双语**：一键切换；语言会记住，窗口、托盘菜单、托盘提示和系统通知同步切换。
-- 📋 **今日待办**：给每项任务预估 1~7 个番茄，选择当前任务，完成的专注自动记到任务上；**按系统本地时区在 0 点自动刷新（应用空闲时也生效）**，已完成归档、未完成顺延；任务面板提供**「清空任务」**按钮，可随时强制清零重新开始。中途勾完成也会收到本轮番茄。
+- 📋 **今日待办**：给每项任务预估 1~7 个番茄，选择当前任务，完成的专注自动记到任务上；**任务可就地编辑**（名称和预估番茄数）；**按系统本地时区在 0 点自动刷新（应用空闲时也生效）**，已完成归档、未完成顺延；任务面板提供**「清空任务」**按钮，可随时强制清零重新开始。中途勾完成也会收到本轮番茄。
 - 🧠 **中断记录**：专注中一键记录「走神」和「被打扰」，番茄不暂停；今日和近 7 天的中断次数进入统计。
 - 📊 **专注统计**：每日分钟数/番茄数、近 7 天柱状图、连续天数、累计数据与中断次数；支持 JSON 备份导出/导入（含今日待办）。
 - 🎯 **舒尔特方格**：4×4 / 5×5 / 6×6 专注力训练，点错计数，自动记录每种规格的最佳成绩。
 - 🌊 **白噪音**：实时合成粉红噪声，不需要任何音频文件。
-- 🔔 **完成提醒**：合成钟声 + 系统通知，窗口隐藏时也会准时提醒。
+- 🔔 **完成提醒**：合成钟声 + **只弹一次**系统通知；窗口在前台时不打扰，隐藏/后台时提醒。点 × 关闭到托盘不再弹提示。
 - 🖥 **托盘常驻**：点 × 只隐藏窗口，倒计时继续；托盘悬停显示剩余时间，右键菜单可开始/暂停/跳过/退出。
 - 🌙 **深色模式**、全屏沉浸、今日目标输入。
 - 🔒 **数据只在本机**：无登录、无云端、无追踪。

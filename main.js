@@ -49,15 +49,14 @@ function createWindow() {
     },
   })
   win.loadFile(htmlPath())
-  // 点 X 只隐藏，不退出；托盘常驻
+  // 点 X 只隐藏，不退出；托盘常驻，不再弹“仍在运行”的气泡
   win.on('close', (e) => {
     if (!quitting) {
       e.preventDefault()
       win.hide()
-      showOnceBalloon(L('番茄钟仍在后台运行，右键托盘图标可退出', 'Pomodoro is still running in the background. Right-click the tray icon to quit.'))
     }
   })
-  win.on('show', rebuildMenu)
+  win.on('show', () => { rebuildMenu(); win.focus() })
   win.on('hide', rebuildMenu)
 }
 
@@ -72,6 +71,7 @@ function createTray() {
     try {
       if (!msg || typeof msg !== 'object') return
       if (msg.type === 'state') {
+        const prev = state
         state = {
           running: !!msg.running,
           remaining: msg.remaining | 0,
@@ -80,7 +80,10 @@ function createTray() {
           lang: msg.lang === 'en' ? 'en' : 'zh',
         }
         updateTrayTooltip()
-        rebuildMenu()
+        // 只在菜单内容真正变化时重建，避免每 250ms 重建造成闪烁
+        if (prev.running !== state.running || prev.label !== state.label || prev.lang !== state.lang) {
+          rebuildMenu()
+        }
       } else if (msg.type === 'done') {
         onDone(msg)
       }
@@ -115,14 +118,12 @@ function cmd(name) {
 function toggleWindow() {
   if (!win) return
   if (win.isVisible()) win.hide()
-  else { win.show(); win.focus() }
-}
-
-let balloonShown = false
-function showOnceBalloon(text) {
-  if (balloonShown) return
-  balloonShown = true
-  try { tray.displayBalloon({ title: L('番茄钟', 'Pomodoro'), content: text }) } catch (err) {}
+  else {
+    win.show()
+    win.focus()
+    // Windows 的前台窗口限制有时会吞掉第一次点击，补一次聚焦
+    setTimeout(() => { try { if (win && !win.isDestroyed()) win.focus() } catch (err) {} }, 120)
+  }
 }
 
 function onDone(msg) {
@@ -136,8 +137,8 @@ function onDone(msg) {
     title = en ? 'Long break over' : '长休息结束'
     body = en ? 'Ready for a new round? 🍅' : '开始新的一轮专注吧 🍅'
   }
-  // 窗口隐藏时由主进程发系统通知（可见时网页自己会弹）
-  if (!win || !win.isVisible()) {
+  // 托盘版只由主进程发一次通知：窗口在前台时不打扰，隐藏/后台时提醒
+  if (!win || !win.isFocused()) {
     try {
       if (Notification.isSupported()) {
         new Notification({ title, body, icon: icon256() }).show()
@@ -157,7 +158,10 @@ if (!gotLock) {
   app.quit()
 } else {
   app.on('second-instance', () => {
-    if (win) { win.show(); win.focus() }
+    if (win) {
+      win.show(); win.focus()
+      setTimeout(() => { try { if (win && !win.isDestroyed()) win.focus() } catch (err) {} }, 120)
+    }
   })
   app.whenReady().then(() => {
     try {
