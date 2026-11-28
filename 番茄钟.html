@@ -251,6 +251,15 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
   background:transparent;color:var(--muted);cursor:pointer;font-size:13px;line-height:1;
 }
 .task-item .t-icon:hover{color:var(--accent);border-color:var(--accent)}
+.task-item.editing{background:var(--soft)}
+.task-edit-title{
+  flex:1;min-width:0;padding:7px 9px;border-radius:8px;border:1px solid var(--accent);
+  background:var(--card);color:var(--text);font-size:13px;outline:none;
+}
+.task-edit-est{
+  flex:none;width:54px;padding:7px 4px;text-align:center;border-radius:8px;
+  border:1px solid var(--line);background:var(--card);color:var(--text);font-size:13px;
+}
 .task-summary{font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
 </style>
 </head>
@@ -383,6 +392,7 @@ footer{text-align:center;font-size:12px;color:var(--muted)}
 
 <script>
 'use strict'
+const HOSTED = !!(window.pomoBridge || (window.chrome && window.chrome.webview))
 const $ = id => document.getElementById(id)
 const el = {
   time: $('time'), phase: $('phase'), dots: $('dots'), stats: $('stats'), quote: $('quote'),
@@ -469,6 +479,7 @@ const I18N = {
     taskEmpty: '还没有任务，先写下今天要完成的事吧',
     taskPickTitle: '点击设为当前任务', taskDoneTitle: '已完成', taskUndoneTitle: '恢复未完成',
     taskMarkDone: '标记完成', taskDeleteTitle: '删除任务',
+    taskEditTitle: '编辑任务', taskSave: '保存', taskCancel: '取消', taskUpdated: '任务已更新',
     taskSummary: '未完成 {open} 项 · 已投入 {spent} 个番茄 · 预计还需 {left} 个',
     allDone: '今日任务已全部完成 🎉',
     tooManyEst: '超过 7 个番茄的任务，建议拆成小任务',
@@ -552,6 +563,7 @@ const I18N = {
     taskEmpty: 'No tasks yet — add what you want to finish today',
     taskPickTitle: 'Set as current task', taskDoneTitle: 'Done', taskUndoneTitle: 'Mark as not done',
     taskMarkDone: 'Mark done', taskDeleteTitle: 'Delete task',
+    taskEditTitle: 'Edit task', taskSave: 'Save', taskCancel: 'Cancel', taskUpdated: 'Task updated',
     taskSummary: '{open} open · 🍅 spent {spent} · {left} more estimated',
     allDone: "All of today's tasks are done 🎉",
     tooManyEst: 'Split tasks that need more than 7 pomodoros',
@@ -697,6 +709,7 @@ if (activeTaskId && !activeTask()) {
   try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
 }
 let sessionTaskId = activeTaskId // 本轮专注归属的任务；中途勾完成也不改变本轮归属
+let editingTaskId = ''
 let todayStamp = todayKey()
 let dayTimer = null
 function ensureToday() {
@@ -712,6 +725,7 @@ function ensureToday() {
     try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
   }
   if (sessionTaskId && !tasksDoc.items.some(task => task.id === sessionTaskId)) sessionTaskId = ''
+  if (editingTaskId && !tasksDoc.items.some(task => task.id === editingTaskId)) editingTaskId = ''
   renderTaskNow()
   renderTaskList()
   if (!el.statsPanel.hidden) renderStats()
@@ -806,8 +820,8 @@ function noiseOff() {
 
 /* ---------- 通知 ---------- */
 function notice(title, body) {
-  const hosted = !!(window.pomoBridge || (window.chrome && chrome.webview))
-  if (hosted && document.hidden) return // 托盘版窗口隐藏时由宿主进程发通知
+  // 托盘版只由主进程发一次系统通知，避免页面和主进程各弹一个
+  if (HOSTED) return
   try {
     if ('Notification' in window && Notification.permission === 'granted') new Notification(title, { body: body })
   } catch (e) {}
@@ -865,9 +879,11 @@ function start(bypass) {
   if (mode === 'focus' && remaining >= sessionTotal) sessionTaskId = activeTaskId
   if (!bypass && mode === 'focus' && settings.schulte) { sOpen(true); return }
   audio()
-  try {
-    if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()
-  } catch (e) {}
+  if (!HOSTED) {
+    try {
+      if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()
+    } catch (e) {}
+  }
   setQuote(mode === 'focus' ? 'focus' : 'break')
   endTime = Date.now() + remaining * 1000
   running = true
@@ -931,7 +947,7 @@ function complete() {
       saveTasks()
       renderTaskNow()
       if (!el.taskPanel.hidden) renderTaskList()
-      if (task.pomos === task.est && !task.done) toast(t('taskEstReached', { title: task.title }))
+      if (task.pomos === task.est && !task.done && document.hasFocus()) toast(t('taskEstReached', { title: task.title }))
     }
     notice(t('completeFocusTitle'), t('completeFocusBody', { count: today.count }))
   } else if (finished === 'long') {
@@ -1008,6 +1024,34 @@ function renderTaskList() {
     el.taskList.appendChild(empty)
   }
   items.forEach(task => {
+    if (task.id === editingTaskId) {
+      const row = document.createElement('div')
+      row.className = 'task-item editing'
+      row.dataset.id = task.id
+      const titleInput = document.createElement('input')
+      titleInput.className = 'task-edit-title'
+      titleInput.maxLength = 40
+      titleInput.value = task.title
+      const estInput = document.createElement('input')
+      estInput.className = 'task-edit-est'
+      estInput.type = 'number'
+      estInput.min = '1'
+      estInput.max = '7'
+      estInput.value = task.est
+      const saveBtn = document.createElement('button')
+      saveBtn.className = 't-icon'
+      saveBtn.dataset.act = 'save'
+      saveBtn.title = t('taskSave')
+      saveBtn.textContent = '✓'
+      const cancelBtn = document.createElement('button')
+      cancelBtn.className = 't-icon'
+      cancelBtn.dataset.act = 'cancel'
+      cancelBtn.title = t('taskCancel')
+      cancelBtn.textContent = '✕'
+      row.append(titleInput, estInput, saveBtn, cancelBtn)
+      el.taskList.appendChild(row)
+      return
+    }
     const row = document.createElement('div')
     row.className = 'task-item' + (task.done ? ' done' : '') + (task.id === activeTaskId && !task.done ? ' active' : '')
     row.dataset.id = task.id
@@ -1027,12 +1071,17 @@ function renderTaskList() {
     doneBtn.dataset.act = 'done'
     doneBtn.title = task.done ? t('taskUndoneTitle') : t('taskMarkDone')
     doneBtn.textContent = task.done ? '↩' : '✓'
+    const editBtn = document.createElement('button')
+    editBtn.className = 't-icon'
+    editBtn.dataset.act = 'edit'
+    editBtn.title = t('taskEditTitle')
+    editBtn.textContent = '✎'
     const delBtn = document.createElement('button')
     delBtn.className = 't-icon'
     delBtn.dataset.act = 'del'
     delBtn.title = t('taskDeleteTitle')
     delBtn.textContent = '✕'
-    row.append(pick, doneBtn, delBtn)
+    row.append(pick, doneBtn, editBtn, delBtn)
     el.taskList.appendChild(row)
   })
   const open = tasksDoc.items.filter(task => !task.done)
@@ -1091,6 +1140,7 @@ function taskSetDone(task, done) {
 function taskDelete(task) {
   if (!confirm(t('deleteConfirm', { title: task.title }))) return
   tasksDoc.items = tasksDoc.items.filter(x => x.id !== task.id)
+  if (editingTaskId === task.id) editingTaskId = ''
   if (activeTaskId === task.id) {
     activeTaskId = ''
     try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
@@ -1100,6 +1150,35 @@ function taskDelete(task) {
   renderTaskNow()
   renderTaskList()
 }
+function beginTaskEdit(id) {
+  editingTaskId = id
+  renderTaskList()
+  const input = el.taskList.querySelector('.task-edit-title')
+  if (input) { input.focus(); input.select() }
+}
+function saveTaskEdit() {
+  const row = el.taskList.querySelector('.task-item.editing')
+  if (!row) return
+  const task = tasksDoc.items.find(x => x.id === row.dataset.id)
+  if (!task) { editingTaskId = ''; renderTaskList(); return }
+  const titleInput = row.querySelector('.task-edit-title')
+  const title = titleInput.value.trim().slice(0, 40)
+  if (!title) { titleInput.focus(); return }
+  let est = parseInt(row.querySelector('.task-edit-est').value, 10)
+  if (isNaN(est) || est < 1) est = 1
+  if (est > 7) est = 7
+  task.title = title
+  task.est = est
+  editingTaskId = ''
+  saveTasks()
+  renderTaskNow()
+  renderTaskList()
+  toast(t('taskUpdated'))
+}
+function cancelTaskEdit() {
+  editingTaskId = ''
+  renderTaskList()
+}
 function clearTodayTasks() {
   ensureToday()
   const n = tasksDoc.items.length
@@ -1107,6 +1186,7 @@ function clearTodayTasks() {
   const key = focusInProgress() ? 'clearConfirmRunning' : 'clearConfirm'
   if (!confirm(t(key, { n: n }))) return
   tasksDoc.items = []
+  editingTaskId = ''
   activeTaskId = ''
   sessionTaskId = ''
   try { localStorage.removeItem('pomo.activeTask') } catch (e) {}
@@ -1120,6 +1200,10 @@ function tasksOpen() {
   el.taskPanel.hidden = false
   renderTaskList()
   renderTaskNow()
+  // 打开后直接聚焦输入框；首次打开窗口时也能马上开始输入
+  setTimeout(() => {
+    if (!el.taskPanel.hidden && !editingTaskId) el.taskTitle.focus()
+  }, 80)
 }
 function tasksClose() { el.taskPanel.hidden = true }
 function renderInterrupts() {
@@ -1444,8 +1528,14 @@ el.langBtn.addEventListener('click', () => setLang(lang === 'zh' ? 'en' : 'zh'))
 el.chipTasks.addEventListener('click', tasksOpen)
 el.taskClose.addEventListener('click', tasksClose)
 el.taskAdd.addEventListener('click', addTask)
-el.taskTitle.addEventListener('keydown', e => { if (e.key === 'Enter') addTask() })
-el.taskEst.addEventListener('keydown', e => { if (e.key === 'Enter') addTask() })
+el.taskTitle.addEventListener('keydown', e => {
+  if (e.isComposing || e.keyCode === 229) return
+  if (e.key === 'Enter') addTask()
+})
+el.taskEst.addEventListener('keydown', e => {
+  if (e.isComposing || e.keyCode === 229) return
+  if (e.key === 'Enter') addTask()
+})
 el.taskList.addEventListener('click', e => {
   const btn = e.target.closest('[data-act]')
   if (!btn) return
@@ -1457,9 +1547,21 @@ el.taskList.addEventListener('click', e => {
     if (!task.done) setActiveTask(task.id)
   } else if (btn.dataset.act === 'done') {
     taskSetDone(task, !task.done)
+  } else if (btn.dataset.act === 'edit') {
+    beginTaskEdit(task.id)
+  } else if (btn.dataset.act === 'save') {
+    saveTaskEdit()
+  } else if (btn.dataset.act === 'cancel') {
+    cancelTaskEdit()
   } else if (btn.dataset.act === 'del') {
     taskDelete(task)
   }
+})
+el.taskList.addEventListener('keydown', e => {
+  if (!e.target.closest('.task-item.editing')) return
+  if (e.isComposing || e.keyCode === 229) return
+  if (e.key === 'Escape') { e.preventDefault(); cancelTaskEdit() }
+  else if (e.key === 'Enter') { e.preventDefault(); saveTaskEdit() }
 })
 el.taskClear.addEventListener('click', clearTodayTasks)
 el.taskNow.addEventListener('click', () => {
